@@ -130,6 +130,7 @@ class Trainer:
             ):
                 input, target = batch
                 input = input.to(self.device)
+                target = target.to(self.device)
 
                 output = self.model(input)
 
