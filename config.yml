@@ -8,6 +8,7 @@ data_ver: v3.6
 root:
   data: D:/datasets/Anodet_ICQC/RealAD_v2.1
   out: D:/datasets/Anodet_ICQC/RealAD_v2.1
+  ckpt: D:/datasets/Anodet_ICQC/RealAD_v2.1
   
 num_classes: 6
 

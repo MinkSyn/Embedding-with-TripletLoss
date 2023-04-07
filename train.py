@@ -129,6 +129,8 @@ class Trainer:
                 tqdm(train_dl, desc=f"Training epoch {epoch:>2d}")
             ):
                 input, target = batch
+                input = input.to(self.device)
+
                 output = self.model(input)
 
                 loss = self.criterion(output, target)
