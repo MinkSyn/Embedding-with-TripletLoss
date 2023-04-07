@@ -129,9 +129,6 @@ class Trainer:
                 tqdm(train_dl, desc=f"Training epoch {epoch:>2d}")
             ):
                 input, target = batch
-                print(input.shape)
-                print(target.shape)
-                exit()
                 input = input.to(self.device)
 
                 output = self.model(input)
