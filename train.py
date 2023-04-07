@@ -30,7 +30,7 @@ class Trainer:
         self.data_ver = cfg['data_ver']
         self.run_name = f"{model_arch}__{self.data_ver}"
 
-        model = ResNet50_v4(pretrained=True, testing=False)
+        model = ResNet50_v4(arch=model_arch, pretrained=True, testing=False)
         self.model = model.to(self.device)
 
         self.data_root = cfg['root']['data']

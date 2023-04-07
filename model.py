@@ -4,10 +4,12 @@ from torch.nn import functional as F
 
 
 class ResNet50_v4(nn.Module):
-    def __init__(self, layer=None, dropout_prob=0.6, pretrained=False, testing=True):
+    def __init__(
+        self, arch, layer=None, dropout_prob=0.6, pretrained=False, testing=True
+    ):
         super().__init__()
         self.testing = testing
-        self.arch = timm.create_model('resnet50', pretrained=pretrained)
+        self.arch = timm.create_model(arch, pretrained=pretrained)
         self.layer = layer
         self.dropout = nn.Dropout(dropout_prob)
         self.last_linear = nn.Linear(307200, 512, bias=False)
