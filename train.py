@@ -28,7 +28,7 @@ class Trainer:
         model_arch = cfg['model']['arch']
         logger.info(f"Constructing model {model_arch} ...")
         self.data_ver = cfg['data_ver']
-        self.run_name = f"{model_arch}__{self.data_ver}__{cfg['run']}"
+        self.run_name = f"{model_arch}__{self.data_ver}"
 
         model = ResNet50_v4(pretrained=True, testing=False)
         self.model = model.to(self.device)
@@ -127,7 +127,7 @@ class Trainer:
             train_losses = []
 
             for i, batch in enumerate(
-                tqdm(train_dl, desc=f"Training epoch {epoch:>2d}")
+                tqdm(train_dl, desc=f"Training epoch {(epoch + 1):>2d}")
             ):
                 input, target = batch
                 input = input.to(self.device)
@@ -162,7 +162,7 @@ class Trainer:
             # Checkpoints
             logger.info(f"Save checkpoints for epoch {epoch + 1}.")
             weight_path = (
-                f"{self.weights_dir}/{self.run_name}_ep{str(epoch).zfill(2)}.pth"
+                f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
 
             torch.save(
