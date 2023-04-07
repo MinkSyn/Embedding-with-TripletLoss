@@ -74,7 +74,7 @@ class Trainer:
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
         train_ds = PatchCoreDataset(
             root=self.data_root,
-            transform=tfms,
+            transforms=tfms,
         )
         train_dl = DataLoader(
             train_ds,
