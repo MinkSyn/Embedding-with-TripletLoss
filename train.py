@@ -5,13 +5,13 @@ from collections import OrderedDict
 
 import torch
 from loguru import logger
-from torchvision import datasets
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from config import Config
 from const import STATS
 from loss import TripletLoss
+from dataset import PatchCoreDataset
 from model import ResNet50_v4
 from tool import get_tfms, verify_device
 
@@ -72,7 +72,7 @@ class Trainer:
 
     def get_loaders(self):
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
-        train_ds = datasets.ImageFolder(
+        train_ds = PatchCoreDataset(
             root=self.data_root,
             transform=tfms,
         )
@@ -160,7 +160,7 @@ class Trainer:
             logger.info(epoch_info)
 
             # Checkpoints
-            logger.info(f"Save checkpoints [{epoch}].")
+            logger.info(f"Save checkpoints for epoch {epoch + 1}.")
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}_ep{str(epoch).zfill(2)}.pth"
             )

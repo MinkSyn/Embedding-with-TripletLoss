@@ -1,63 +1,50 @@
-import random
-from typing import Any, Callable, Optional, Tuple
+import os
 
-from torchvision.datasets import ImageFolder
+from PIL import Image
+from torch.utils.data import Dataset
+from torchvision import transforms
+
+from const import CardID
+from tool import is_image_file
 
 
-class TripletFolder(ImageFolder):
-    def __init__(self, root: str, transform: Optional[Callable] = None):
-        super(TripletFolder, self).__init__(root=root, transform=transform)
+class PatchCoreDataset(Dataset):
+    def __init__(
+        self,
+        root: str,
+        transforms: transforms = None,
+    ):
+        super().__init__()
+        self.transforms = transforms
 
-        # Create a dictionary of lists for each class for reverse lookup
-        # to generate triplets
-        self.classdict = {}
-        for c in self.classes:
-            ci = self.class_to_idx[c]
-            self.classdict[ci] = []
+        self.samples = self.get_samples(root)
 
-        # append each file in the approach dictionary element list
-        for s in self.samples:
-            self.classdict[s[1]].append(s[0])
+    def get_samples(self, root):
+        samples = []
+        for card_type in os.listdir(root):
+            id_class = CardID[card_type].value
+            card_path = os.path.join(root, card_type)
 
-        # keep track of the sizes for random sampling
-        self.classdictsize = {}
-        for c in self.classes:
-            ci = self.class_to_idx[c]
-            self.classdictsize[ci] = len(self.classdict[ci])
+            for quality_type in os.listdir(card_path):
+                quality_path = os.path.join(card_path, quality_type)
 
-    # Return a triplet, with positive and negative selected at random.
-    def __getitem__(self, index: int) -> Tuple[Any, Any, Any]:
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: (sample, sample, sample) where the samples
-                    are anchor, positive, and negative.
-            The positive and negative instances are sampled randomly.
-        """
+                for file in os.listdir(quality_path):
+                    filename = os.fsdecode(file)
+                    if is_image_file(filename):
+                        path = os.path.join(quality_path, filename)
+                        samples.append((path, id_class))
+        return samples
 
-        # The anchor is the image at this index.
-        a_path, a_target = self.samples[index]
+    def __len__(self):
+        return len(self.samples)
 
-        prs = random.random()  # positive random sample
-        nrc = random.random()  # negative random class
-        nrs = random.random()  # negative random sample
+    def __getitem__(self, idx):
+        path, target = self.samples[idx]
 
-        # random negative class cannot be the same class as anchor. We add
-        # a random offset that is 1 less than the number required to wrap
-        # back around to a_target after modulus.
-        nrc = (a_target + int(nrc * (len(self.classes) - 1))) % len(self.classes)
+        with open(path, 'rb') as f:
+            img = Image.open(f).convert('RGB')
 
-        # Positive Instance: select a random instance from the same class as anchor.
-        p_path = self.classdict[a_target][int(self.classdictsize[a_target] * prs)]
+        if self.transforms is not None:
+            img = self.transforms(img)
 
-        # Negative Instance: select a random instance from the random negative class.
-        n_path = self.classdict[nrc][int(self.classdictsize[nrc] * nrs)]
-
-        # Load the data for these samples.
-        a_sample = self.loader(a_path)
-        p_sample = self.loader(p_path)
-        n_sample = self.loader(n_path)
-
-        # note that we do not return the label!
-        return a_sample, p_sample, n_sample
+        return img, target

@@ -4,6 +4,23 @@ import torchvision.transforms as T
 from const import IMG_SIZE
 
 
+IMG_EXTENSIONS = (
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".ppm",
+    ".bmp",
+    ".pgm",
+    ".tif",
+    ".tiff",
+    ".webp",
+)
+
+
+def is_image_file(filename: str):
+    return filename.lower().endswith(IMG_EXTENSIONS)
+
+
 def get_tfms(img_size=None, norm_stats=None):
     tfms = [T.ToTensor()]
     if img_size is None:
