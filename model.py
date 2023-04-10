@@ -11,8 +11,9 @@ class ResNet50_v4(nn.Module):
         self.testing = testing
         self.arch = timm.create_model(arch, pretrained=pretrained)
         self.layer = layer
+        self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.dropout = nn.Dropout(dropout_prob)
-        self.last_linear = nn.Linear(307200, 512, bias=False)
+        self.last_linear = nn.Linear(2048, 512, bias=False)
         self.last_bn = nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True)
 
     def forward_features(self, x):
@@ -41,6 +42,7 @@ class ResNet50_v4(nn.Module):
         return x4
 
     def forward_head(self, x):
+        x = self.avgpool(x)
         x = self.dropout(x)
         x = x.view(x.shape[0], -1)
         x = self.last_linear(x)
@@ -60,12 +62,12 @@ if __name__ == '__main__':
     import torch
 
     # Extraction PatchCore
-    model = ResNet50_v4(layer=['layer2', 'layer3'], pretrained=False, testing=True)
+    # model = ResNet50_v4(arch='resnet50', layer=['layer2', 'layer3'], pretrained=False, testing=True)
     # Training
-    # model = ResNet50_v4(pretrained=True, testing=False)
+    model = ResNet50_v4(arch='resnet50', pretrained=True, testing=False)
     input = torch.rand((2, 3, 300, 450))
 
     output = model(input)
-    # print(output.shape)
-    print(output['layer2'].shape)
-    print(output['layer3'].shape)
+    print(output.shape)
+    # print(output['layer2'].shape)
+    # print(output['layer3'].shape)
