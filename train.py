@@ -197,7 +197,6 @@ class Trainer:
                     root=self.test_dir,
                     out_root=embedding_root,
                     weight_path=None,
-                    model=self.model,
                     img_size=self.img_size,
                     device=self.device,
                     batch_size=self.batch_size,
