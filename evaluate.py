@@ -34,8 +34,7 @@ class PatchCoreEvaluate:
         self.out_root = out_root
         os.makedirs(self.out_root, exist_ok=True)
 
-        model = self.load_model(weight_path)
-        self.model = model.to(self.device)
+        self.model = self.load_model(weight_path)
 
         transform = get_tfms(img_size=img_size, norm_stats=norm_stats)
         self.train_loader, self.val_loader = self.get_loader(
@@ -54,6 +53,7 @@ class PatchCoreEvaluate:
         ckpt = torch.load(weight_path)
 
         model = ResNet50_v4(arch=ckpt['arch'], testing=False)
+        model = model.to(self.device)
         model = model.load_state_dict(ckpt['model_state'])
         return model
 
