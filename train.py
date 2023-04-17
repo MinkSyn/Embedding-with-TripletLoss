@@ -122,8 +122,9 @@ class Trainer:
             logger.info(f"Resuming at epoch [{init_epoch}]")
 
         for epoch in range(init_epoch, self.num_epochs):
+            torch.cuda.empty_cache()
             epoch_time = time.time()
-
+            
             # Training phase
             self.model.train()
             train_losses = []
@@ -195,7 +196,8 @@ class Trainer:
                 eval = PatchCoreEvaluate(
                     root=self.test_dir,
                     out_root=embedding_root,
-                    weight_path=weight_path,
+                    weight_path=None,
+                    model=self.model,
                     img_size=self.img_size,
                     device=self.device,
                     batch_size=self.batch_size,
