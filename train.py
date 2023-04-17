@@ -35,6 +35,7 @@ class Trainer:
         self.model = model.to(self.device)
 
         self.data_root = cfg['root']['data']
+        self.test_dir = cfg['root']['test']
         img_size = cfg['model']['img_size']
         if isinstance(img_size, int):
             self.img_size = img_size
@@ -192,7 +193,7 @@ class Trainer:
                 )
                 # Evaluate
                 eval = PatchCoreEvaluate(
-                    root=self.data_root,
+                    root=self.test_dir,
                     out_root=embedding_root,
                     weight_path=weight_path,
                     img_size=self.img_size,

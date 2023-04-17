@@ -55,7 +55,7 @@ class PatchCoreEvaluate:
 
         model = ResNet50_v4(arch=ckpt['arch'], testing=False)
         model = model.load_state_dict(ckpt['model_state'])
-        return model
+        return model.to(self.device)
 
     def get_loader(self, batch_size, transform):
         dataset = PatchCoreDataset(self.root, transform)
@@ -75,7 +75,7 @@ class PatchCoreEvaluate:
         return train_loader, val_loader
 
     def embedding_dataset(self):
-        for idx, input, target in enumerate(self.train_loader):
+        for idx, (input, target) in enumerate(self.train_loader):
             input = input.to(self.device)
             output = self.model(input)
             
@@ -92,7 +92,7 @@ class PatchCoreEvaluate:
                     dim=0,
                 )
 
-        for input, target in self.val_loader:
+        for idx, (input, target) in enumerate(self.val_loader):
             input = input.to(self.device)
             output = self.model(input)
 
