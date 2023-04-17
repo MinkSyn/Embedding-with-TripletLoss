@@ -193,17 +193,18 @@ class Trainer:
                     weight_path,
                 )
                 # Evaluate
-                eval = PatchCoreEvaluate(
-                    root=self.test_dir,
-                    out_root=embedding_root,
-                    weight_path=weight_path,
-                    img_size=self.img_size,
-                    device=self.device,
-                    batch_size=self.batch_size,
-                    norm_stats=self.norm_stats,
-                )
-                eval.embedding_dataset()
-                eval.clasification()
+                with torch.no_grad():
+                    eval = PatchCoreEvaluate(
+                        root=self.test_dir,
+                        out_root=embedding_root,
+                        weight_path=weight_path,
+                        img_size=self.img_size,
+                        device=self.device,
+                        batch_size=self.batch_size,
+                        norm_stats=self.norm_stats,
+                    )
+                    eval.embedding_dataset()
+                    eval.clasification()
                 
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:
