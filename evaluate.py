@@ -11,8 +11,8 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from dataset import PatchCoreDataset
-from tool import get_tfms
 from model import ResNet50_v4
+from tool import get_tfms
 
 DATA_ROOT = 'D:/datasets/Anodet_ICQC/Testing/Syn_v3.6'
 EMBED_DIR = f'E:/PatchCore-Private/embedding'

@@ -13,6 +13,7 @@ from const import STATS
 from loss import TripletLoss
 from dataset import PatchCoreDataset
 from model import ResNet50_v4
+from evaluate import PatchCoreEvaluate
 from tool import get_tfms, verify_device
 
 torch.manual_seed(1235)
@@ -167,8 +168,12 @@ class Trainer:
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
+            embedding_root = (
+                f"{self.out_root}/epoch_{epoch+1}"
+            )
+            os.makedirs(embedding_root, exist_ok=True)
 
-            if (epoch + 1) % 5 == 0:
+            if (epoch + 1) % 1 == 0:
                 print(f"Save weight epoch {epoch}")
                 torch.save(
                     {
@@ -183,7 +188,19 @@ class Trainer:
                     },
                     weight_path,
                 )
-
+                # Evaluate
+                eval = PatchCoreEvaluate(
+                    root=self.data_root,
+                    out_root=embedding_root,
+                    weight_path=weight_path,
+                    img_size=self.img_size,
+                    device=self.device,
+                    batch_size=self.batch_size,
+                    norm_stats=self.data_ver,
+                )
+                eval.embedding_dataset()
+                eval.clasification()
+                
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:
                 logger.info(f"Early stopping at epoch [{epoch}]")
