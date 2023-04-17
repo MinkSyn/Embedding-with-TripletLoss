@@ -70,7 +70,7 @@ class PatchCoreEvaluate:
 
         np.random.seed(1235)
         np.random.shuffle(indices)
-        train_indices, val_indices = indices[split:], indices[:split]
+        train_indices, val_indices = indices[:split], indices[split:]
 
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(val_indices)

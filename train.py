@@ -177,7 +177,7 @@ class Trainer:
             )
             os.makedirs(embedding_root, exist_ok=True)
 
-            if (epoch + 1) % 1 == 0:
+            if (epoch + 1) % 5 == 0:
                 print(f"Save weight epoch {epoch}")
                 torch.save(
                     {
@@ -206,14 +206,12 @@ class Trainer:
                     )
                     eval.embedding_dataset()
                     eval.clasification()
+                    logger.info("-" * 20)
                 
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:
                 logger.info(f"Early stopping at epoch [{epoch}]")
                 break
-
-            if (epoch + 1) % 5 == 0:
-                logger.info("-" * 20)
 
         train_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - train_time))
         logger.info(f"Total training time: {train_time}")
