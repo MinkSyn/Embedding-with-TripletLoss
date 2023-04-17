@@ -198,7 +198,7 @@ class Trainer:
                     img_size=self.img_size,
                     device=self.device,
                     batch_size=self.batch_size,
-                    norm_stats=self.data_ver,
+                    norm_stats=self.norm_stats,
                 )
                 eval.embedding_dataset()
                 eval.clasification()
