@@ -25,6 +25,7 @@ class PatchCoreEvaluate:
         out_root,
         weight_path,
         device,
+        model=None,
         img_size=(300, 450),
         batch_size=16,
         norm_stats='patchcore_v3.6',
@@ -34,7 +35,10 @@ class PatchCoreEvaluate:
         self.out_root = out_root
         os.makedirs(self.out_root, exist_ok=True)
 
-        self.model = self.load_model(weight_path)
+        if model is None:
+            self.model = self.load_model(weight_path)
+        else:
+            self.model = model
 
         transform = get_tfms(img_size=img_size, norm_stats=norm_stats)
         self.train_loader, self.val_loader = self.get_loader(
