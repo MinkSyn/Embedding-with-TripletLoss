@@ -47,14 +47,15 @@ class PatchCoreEvaluate:
         self.RF_classify = RandomForestClassifier()
 
     def load_model(self, weight_path):
+        model = ResNet50_v4(arch=ckpt['arch'], testing=False)
+        model = model.to(self.device)
+        
         if not os.path.exists(weight_path):
             raise Exception(f'Not exits path: {weight_path}')
         print(f"Loading PatchCore checkpoint {weight_path} ...")
-        ckpt = torch.load(weight_path)
-
-        model = ResNet50_v4(arch=ckpt['arch'], testing=False)
-        model = model.to(self.device)
-        model = model.load_state_dict(ckpt['model_state'])
+        ckpt = torch.load(weight_path, map_location=self.device)
+        
+        model = model.load_state_dict(ckpt)
         return model
 
     def get_loader(self, batch_size, transform):
@@ -75,11 +76,11 @@ class PatchCoreEvaluate:
         return train_loader, val_loader
 
     def embedding_dataset(self):
-        self.model.train()
+        # self.model.train()
         for idx, (input, target) in enumerate(self.train_loader):
             input = input.to(self.device)
             output = self.model(input)
-            
+
             if idx == 0:
                 embedding_train = output
                 target_train = target
