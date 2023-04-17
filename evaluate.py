@@ -54,7 +54,7 @@ class PatchCoreEvaluate:
         
         model = ResNet50_v4(arch=ckpt['arch'], testing=False)
         model = model.to(self.device)
-        model = model.load_state_dict(ckpt)
+        model = model.load_state_dict(ckpt['model_state'])
         return model
 
     def get_loader(self, batch_size, transform):
