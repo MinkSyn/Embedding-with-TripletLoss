@@ -25,12 +25,12 @@ class Trainer:
 
         self.device = verify_device(cfg['device'])
 
-        model_arch = cfg['model']['arch']
-        logger.info(f"Constructing model {model_arch} ...")
+        self.model_arch = cfg['model']['arch']
+        logger.info(f"Constructing model {self.model_arch} ...")
         self.data_ver = cfg['data_ver']
-        self.run_name = f"{model_arch}__{self.data_ver}"
+        self.run_name = f"{self.model_arch}__{self.data_ver}"
 
-        model = ResNet50_v4(arch=model_arch, pretrained=True, testing=False)
+        model = ResNet50_v4(arch=self.model_arch, pretrained=True, testing=False)
         self.model = model.to(self.device)
 
         self.data_root = cfg['root']['data']
@@ -126,9 +126,11 @@ class Trainer:
             self.model.train()
             train_losses = []
 
-            for i, batch in enumerate(
-                tqdm(train_dl, desc=f"Training epoch {(epoch + 1):>2d}")
-            ):
+            # for i, batch in enumerate(
+            #     tqdm(train_dl, desc=f"Training epoch {(epoch + 1):>2d}")
+            # ):
+            logger.info(f"Training epoch {(epoch + 1):>2d}")
+            for i, batch in enumerate(train_dl):
                 input, target = batch
                 input = input.to(self.device)
                 target = target.to(self.device)
@@ -136,6 +138,7 @@ class Trainer:
                 output = self.model(input)
 
                 loss = self.criterion(output, target)
+                loss = loss.detach().cpu()
                 train_losses.append(loss)
 
                 optimizer.zero_grad()
@@ -165,18 +168,21 @@ class Trainer:
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
 
-            torch.save(
-                {
-                    'epoch': epoch,
-                    'model_state': self.model.state_dict(),
-                    'optim_state': optimizer.state_dict(),
-                    'sched_state': scheduler.state_dict()
-                    if scheduler is not None
-                    else None,
-                    'last_loss': train_loss,
-                },
-                weight_path,
-            )
+            if (epoch + 1) % 5 == 0:
+                print(f"Save weight epoch {epoch}")
+                torch.save(
+                    {
+                        'epoch': epoch,
+                        'arch': self.model_arch,
+                        'model_state': self.model.state_dict(),
+                        'optim_state': optimizer.state_dict(),
+                        'sched_state': scheduler.state_dict()
+                        if scheduler is not None
+                        else None,
+                        'last_loss': train_loss,
+                    },
+                    weight_path,
+                )
 
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:
