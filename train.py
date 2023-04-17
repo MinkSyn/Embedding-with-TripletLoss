@@ -139,12 +139,14 @@ class Trainer:
                 output = self.model(input)
 
                 loss = self.criterion(output, target)
-                loss = loss.detach().cpu()
-                train_losses.append(loss)
-
+                # loss.requires_grad = True
+                
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
+                
+                loss = loss.detach().cpu()
+                train_losses.append(loss)
 
             train_loss = torch.stack(train_losses).mean().item()
 
