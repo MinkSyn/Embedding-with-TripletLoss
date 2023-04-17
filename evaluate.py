@@ -47,14 +47,13 @@ class PatchCoreEvaluate:
         self.RF_classify = RandomForestClassifier()
 
     def load_model(self, weight_path):
-        model = ResNet50_v4(arch=ckpt['arch'], testing=False)
-        model = model.to(self.device)
-        
         if not os.path.exists(weight_path):
             raise Exception(f'Not exits path: {weight_path}')
         print(f"Loading PatchCore checkpoint {weight_path} ...")
         ckpt = torch.load(weight_path, map_location=self.device)
         
+        model = ResNet50_v4(arch=ckpt['arch'], testing=False)
+        model = model.to(self.device)
         model = model.load_state_dict(ckpt)
         return model
 
