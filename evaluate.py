@@ -103,6 +103,7 @@ class PatchCoreEvaluate:
         for idx, (input, target) in enumerate(self.val_loader):
             input = input.to(self.device)
             output = self.model(input)
+            output = output.detach().cpu()
 
             if idx == 0:
                 embedding_val = output
