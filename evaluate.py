@@ -34,8 +34,8 @@ class PatchCoreEvaluate:
         self.out_root = out_root
         os.makedirs(self.out_root, exist_ok=True)
 
-        self.model = self.load_model(weight_path)
-        
+        model = self.load_model(weight_path)
+        self.model = model.to(self.device)
 
         transform = get_tfms(img_size=img_size, norm_stats=norm_stats)
         self.train_loader, self.val_loader = self.get_loader(
@@ -55,7 +55,7 @@ class PatchCoreEvaluate:
 
         model = ResNet50_v4(arch=ckpt['arch'], testing=False)
         model = model.load_state_dict(ckpt['model_state'])
-        return model.to(self.device)
+        return model
 
     def get_loader(self, batch_size, transform):
         dataset = PatchCoreDataset(self.root, transform)
@@ -75,6 +75,7 @@ class PatchCoreEvaluate:
         return train_loader, val_loader
 
     def embedding_dataset(self):
+        self.model.train()
         for idx, (input, target) in enumerate(self.train_loader):
             input = input.to(self.device)
             output = self.model(input)
