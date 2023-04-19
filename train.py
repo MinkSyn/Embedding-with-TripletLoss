@@ -8,6 +8,7 @@ from loguru import logger
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+from arcface import AddMarginProduct, ArcMarginProduct, SphereProduct
 from config import Config
 from const import STATS
 from loss import TripletLoss
@@ -52,10 +53,14 @@ class Trainer:
         self.num_epochs = cfg['hparams']['num_epochs']
         self.early_stopping = cfg['hparams']['early_stopping']
 
+        self.metric_fc = self._get_arcface(
+            cfg['arcface']['algo'], cfg['num_classes'], cfg['arcface']['params']
+        )
+
         self.optimizer = self._get_optim(cfg['optimizer']['algo'])
         self.optim_hp = cfg['optimizer']['hparams']
 
-        self.criterion = TripletLoss(device=self.device)
+        self.criterion = self.get_loss_func(cfg['loss']['algo'])
 
         if 'scheduler' in cfg.keys():
             self.sched_algo = cfg['scheduler']['algo']
@@ -124,7 +129,7 @@ class Trainer:
         for epoch in range(init_epoch, self.num_epochs):
             torch.cuda.empty_cache()
             epoch_time = time.time()
-            
+
             # Training phase
             self.model.train()
             train_losses = []
@@ -138,15 +143,14 @@ class Trainer:
                 input = input.to(self.device)
                 target = target.to(self.device)
 
-                output = self.model(input)
-
+                feature = self.model(input)
+                output = self.metric_fc(feature, target)
                 loss = self.criterion(output, target)
-                # loss.requires_grad = True
-                
+
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                
+
                 loss = loss.detach().cpu()
                 train_losses.append(loss)
 
@@ -172,9 +176,7 @@ class Trainer:
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
-            embedding_root = (
-                f"{self.out_root}/epoch_{epoch+1}"
-            )
+            embedding_root = f"{self.out_root}/epoch_{epoch+1}"
             os.makedirs(embedding_root, exist_ok=True)
 
             if (epoch + 1) % 5 == 0:
@@ -207,7 +209,7 @@ class Trainer:
                     eval.embedding_dataset()
                     eval.clasification()
                     logger.info("-" * 20)
-                
+
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:
                 logger.info(f"Early stopping at epoch [{epoch}]")
@@ -215,6 +217,33 @@ class Trainer:
 
         train_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - train_time))
         logger.info(f"Total training time: {train_time}")
+
+    def get_loss_func(self, loss_name):
+        if loss_name == 'cross':
+            return torch.nn.CrossEntropyLoss()
+        elif loss_name == 'cross':
+            return TripletLoss(self.device)
+        # elif loss_name == 'focal':
+        #     return FocalLoss(gamma=2)
+        else:
+            raise NotImplementedError
+
+    @staticmethod
+    def _get_arcface(algo, num_classes, params):
+        if algo == 'add':
+            return AddMarginProduct(512, num_classes, s=params['s'], m=params['m'])
+        elif algo == 'arc':
+            return ArcMarginProduct(
+                512,
+                num_classes,
+                s=params['s'],
+                m=params['m'],
+                easy_margin=params['easy_margin'],
+            )
+        elif algo == 'sphere':
+            return SphereProduct(512, num_classes, m=params['m'])
+        else:
+            raise NotImplementedError
 
     @staticmethod
     def _get_optim(optim_name):

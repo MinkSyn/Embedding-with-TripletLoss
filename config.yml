@@ -28,6 +28,17 @@ hparams:
   num_epochs: 30
   early_stopping: 0.001
 
+arcface:
+  algo: arc
+  params:
+    s: 30
+    m: 0.5
+    easy_margin: False
+
+loss:
+  algo: cross
+  # algo: triplet
+
 optimizer:
   algo: sgd
   hparams:
