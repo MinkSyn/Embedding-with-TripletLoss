@@ -53,9 +53,10 @@ class Trainer:
         self.num_epochs = cfg['hparams']['num_epochs']
         self.early_stopping = cfg['hparams']['early_stopping']
 
-        self.metric_fc = self._get_arcface(
+        metric_fc = self._get_arcface(
             cfg['arcface']['algo'], cfg['num_classes'], cfg['arcface']['params']
         )
+        self.metric_fc = metric_fc.to(self.device)
 
         self.optimizer = self._get_optim(cfg['optimizer']['algo'])
         self.optim_hp = cfg['optimizer']['hparams']
