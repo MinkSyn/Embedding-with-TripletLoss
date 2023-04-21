@@ -13,14 +13,24 @@ class ResNet50_v4(nn.Module):
         self.layer = layer
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.dropout = nn.Dropout(dropout_prob)
-        self.last_linear = nn.Linear(2048, 512, bias=False)
+        # self.last_linear = nn.Linear(2048, 512, bias=False)
+        self.last_linear = nn.Linear(512 * 8 * 8, 512, bias=False)
         self.last_bn = nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True)
+        
+        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1,
+                               bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.relu = nn.ReLU(inplace=True)
 
     def forward_features(self, x):
-        x = self.arch.conv1(x)
-        x = self.arch.bn1(x)
-        x = self.arch.act1(x)
-        x = self.arch.maxpool(x)
+        # Triplet Loss
+        # x = self.arch.conv1(x)
+        # x = self.arch.bn1(x)
+        # x = self.arch.act1(x)
+        # x = self.arch.maxpool(x)
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
 
         x1 = self.arch.layer1(x)
         x2 = self.arch.layer2(x1)
@@ -42,12 +52,12 @@ class ResNet50_v4(nn.Module):
         return x4
 
     def forward_head(self, x):
-        x = self.avgpool(x)
-        x = self.dropout(x)
+        # x = self.avgpool(x)
+        # x = self.dropout(x)
         x = x.view(x.shape[0], -1)
         x = self.last_linear(x)
-        x = self.last_bn(x)
-        x = F.normalize(x, p=2, dim=1)
+        # x = self.last_bn(x)
+        # x = F.normalize(x, p=2, dim=1)
         return x
 
     def forward(self, x):

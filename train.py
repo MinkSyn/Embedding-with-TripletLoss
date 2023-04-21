@@ -181,7 +181,7 @@ class Trainer:
             os.makedirs(embedding_root, exist_ok=True)
 
             if (epoch + 1) % 5 == 0:
-                print(f"Save weight epoch {epoch}")
+                print(f"Save weight epoch {epoch+1}")
                 torch.save(
                     {
                         'epoch': epoch,
