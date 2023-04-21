@@ -17,7 +17,7 @@ class ResNet50_v4(nn.Module):
         self.last_linear = nn.Linear(512 * 8 * 8, 512, bias=False)
         self.last_bn = nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True)
         
-        self.conv1 = nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1,
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1,
                                bias=False)
         self.bn1 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU(inplace=True)
