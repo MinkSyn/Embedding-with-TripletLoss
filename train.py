@@ -75,6 +75,9 @@ class Trainer:
 
         self.weights_dir = f"{self.out_root}/weights"
         os.makedirs(self.weights_dir, exist_ok=True)
+        
+        self.embedding_root = f"{self.out_root}/res_embedding"
+        os.makedirs(self.embedding_root, exist_ok=True)
         if cfg['root']['ckpt'] is not None:
             self.ckpt_path = cfg['root']['ckpt']
 
@@ -174,34 +177,34 @@ class Trainer:
             # logger.info(epoch_info)
             print(epoch_info)
 
+            
+            logger.info(f"Save checkpoints for epoch {epoch + 1}.")
+            weight_path = (
+                f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
+            )
+            
+            # Checkpoints
+            torch.save(
+                {
+                    'epoch': epoch,
+                    'arch': self.model_arch,
+                    'model_state': self.model.state_dict(),
+                    'optim_state': optimizer.state_dict(),
+                    'sched_state': scheduler.state_dict()
+                    if scheduler is not None
+                    else None,
+                    'last_loss': train_loss,
+                },
+                weight_path,
+            )
+            # Evaluate
             if (epoch + 1) % 3== 0:
-                # Checkpoints
-                logger.info(f"Save checkpoints for epoch {epoch + 1}.")
-                weight_path = (
-                    f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
-                )
-                embedding_root = f"{self.out_root}/epoch_{epoch+1}"
-                os.makedirs(embedding_root, exist_ok=True)
-                
-                torch.save(
-                    {
-                        'epoch': epoch,
-                        'arch': self.model_arch,
-                        'model_state': self.model.state_dict(),
-                        'optim_state': optimizer.state_dict(),
-                        'sched_state': scheduler.state_dict()
-                        if scheduler is not None
-                        else None,
-                        'last_loss': train_loss,
-                    },
-                    weight_path,
-                )
-                # Evaluate
                 with torch.no_grad():
                     eval = PatchCoreEvaluate(
                         root=self.test_dir,
-                        out_root=embedding_root,
+                        out_root=self.embedding_root,
                         weight_path=None,
+                        epoch=epoch,
                         model=self.model,
                         img_size=self.img_size,
                         device=self.device,
@@ -211,7 +214,7 @@ class Trainer:
                     eval.embedding_dataset()
                     eval.clasification()
                     # logger.info("-" * 20)
-                    print(("-" * 80))
+            print(("-" * 80))
 
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:

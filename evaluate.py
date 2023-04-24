@@ -23,6 +23,7 @@ class PatchCoreEvaluate:
         self,
         root,
         out_root,
+        epoch,
         weight_path,
         device,
         model=None,
@@ -33,6 +34,7 @@ class PatchCoreEvaluate:
         self.device = device
         self.root = root
         self.out_root = out_root
+        self.epoch = epoch
         os.makedirs(self.out_root, exist_ok=True)
 
         logger.info('Evaluate:')
@@ -125,10 +127,10 @@ class PatchCoreEvaluate:
             'embedding_val': embedding_val.numpy(),
             'target_val': target_val.numpy(),
         }
-        torch.save(info_embedding, self.out_root + 'info_embedding.pt')
+        torch.save(info_embedding, self.out_root + f'/res_embedding_{self.epoch}.pt')
 
     def clasification(self):
-        info_embedding = torch.load(self.out_root + 'info_embedding.pt')
+        info_embedding = torch.load(self.out_root + f'/res_embedding_{self.epoch}.pt')
 
         embedding_train = info_embedding['embedding_train']
         target_train = info_embedding['target_train']
@@ -159,17 +161,16 @@ class PatchCoreEvaluate:
         print(f'Accuracy SVM: {SVM_pred}')
         print(("-" * 80))
 
-        print('Linear SVM classification:')
-        self.LinearSVM_classify.fit(embedding_train, target_train)
-        LSVM_pred = self.LinearSVM_classify.score(embedding_val, target_val)
-        print(f'Accuracy Linear SVM: {LSVM_pred}')
-        print(("-" * 80))
+        # print('Linear SVM classification:')
+        # self.LinearSVM_classify.fit(embedding_train, target_train)
+        # LSVM_pred = self.LinearSVM_classify.score(embedding_val, target_val)
+        # print(f'Accuracy Linear SVM: {LSVM_pred}')
+        # print(("-" * 80))
 
         print('Random forest classification:')
         self.RF_classify.fit(embedding_train, target_train)
         RF_pred = self.RF_classify.score(embedding_val, target_val)
         print(f'Accuracy Random Forest: {RF_pred}')
-        print(("-" * 80))
 
 
 def main():
