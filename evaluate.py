@@ -67,7 +67,7 @@ class PatchCoreEvaluate:
         dataset = PatchCoreDataset(self.root, transform)
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
-        split = int(np.floor(0.8 * dataset_size))
+        split = int(np.floor(0.2 * dataset_size))
 
         np.random.seed(1235)
         np.random.shuffle(indices)
