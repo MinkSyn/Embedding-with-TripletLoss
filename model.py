@@ -13,7 +13,6 @@ class ResNet50_v4(nn.Module):
         self.layer = layer
         self.avgpool = nn.AdaptiveAvgPool2d(1)
         self.dropout = nn.Dropout(dropout_prob)
-        # self.last_linear = nn.Linear(2048, 512, bias=False)
         self.last_linear = nn.Linear(2048, 512, bias=False)
         self.last_bn = nn.BatchNorm1d(512, eps=0.001, momentum=0.1, affine=True)
         

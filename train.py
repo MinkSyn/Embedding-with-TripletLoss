@@ -170,18 +170,18 @@ class Trainer:
                 f"Epoch [{epoch:>2d}] : time: {epoch_time} | "
                 f"last_lr: {last_lr:.6f} | train_loss: {train_loss:.4f}"
             )
-            logger.info(epoch_info)
+            # logger.info(epoch_info)
+            print(epoch_info)
 
-            # Checkpoints
-            logger.info(f"Save checkpoints for epoch {epoch + 1}.")
-            weight_path = (
-                f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
-            )
-            embedding_root = f"{self.out_root}/epoch_{epoch+1}"
-            os.makedirs(embedding_root, exist_ok=True)
-
-            if (epoch + 1) % 5 == 0:
-                print(f"Save weight epoch {epoch+1}")
+            if (epoch + 1) % 3== 0:
+                # Checkpoints
+                logger.info(f"Save checkpoints for epoch {epoch + 1}.")
+                weight_path = (
+                    f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
+                )
+                embedding_root = f"{self.out_root}/epoch_{epoch+1}"
+                os.makedirs(embedding_root, exist_ok=True)
+                
                 torch.save(
                     {
                         'epoch': epoch,
@@ -209,7 +209,8 @@ class Trainer:
                     )
                     eval.embedding_dataset()
                     eval.clasification()
-                    logger.info("-" * 20)
+                    # logger.info("-" * 20)
+                    print(("-" * 80))
 
             # Early stopping
             if train_loss <= self.early_stopping and epoch > 3:

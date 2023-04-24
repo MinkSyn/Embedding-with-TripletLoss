@@ -35,6 +35,7 @@ class PatchCoreEvaluate:
         self.out_root = out_root
         os.makedirs(self.out_root, exist_ok=True)
 
+        logger.info('Evaluate:')
         if model is None:
             self.model = self.load_model(weight_path)
         else:
@@ -141,29 +142,34 @@ class PatchCoreEvaluate:
             'valid datasets': embedding_val.shape,
             'valid labels': target_val.shape,
         }
-
-        logger.info('Size of embedding:')
+        
+        print('Size of embedding:')
         print(pd.DataFrame({"size": size_dict.values()}, index=size_dict.keys()))
-
-        logger.info('KNN classification:')
+        print(("-" * 80))
+        
+        print('KNN classification:')
         self.KNN_classify.fit(embedding_train, target_train)
         KNN_pred = self.KNN_classify.score(embedding_val, target_val)
         print(f'Accuracy KNN: {KNN_pred}')
+        print(("-" * 80))
 
-        logger.info('SVM classification:')
+        print('SVM classification:')
         self.SVM_classify.fit(embedding_train, target_train)
         SVM_pred = self.SVM_classify.score(embedding_val, target_val)
         print(f'Accuracy SVM: {SVM_pred}')
+        print(("-" * 80))
 
-        logger.info('Linear SVM classification:')
+        print('Linear SVM classification:')
         self.LinearSVM_classify.fit(embedding_train, target_train)
         LSVM_pred = self.LinearSVM_classify.score(embedding_val, target_val)
         print(f'Accuracy Linear SVM: {LSVM_pred}')
+        print(("-" * 80))
 
-        logger.info('Random forest classification:')
+        print('Random forest classification:')
         self.RF_classify.fit(embedding_train, target_train)
         RF_pred = self.RF_classify.score(embedding_val, target_val)
         print(f'Accuracy Random Forest: {RF_pred}')
+        print(("-" * 80))
 
 
 def main():
