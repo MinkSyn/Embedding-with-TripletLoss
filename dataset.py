@@ -11,31 +11,38 @@ from tool import is_image_file
 class PatchCoreDataset(Dataset):
     def __init__(
         self,
+        split,
         root: str,
         transforms: transforms = None,
     ):
         super().__init__()
         self.transforms = transforms
 
-        self.samples = self.get_samples(root)
+        self.samples = self.get_samples(split, root)
+        
+    def get_samples(self, split, root):
+        if split == 'train':
+            return self.get_samples_train(root)
+        elif split == 'test':
+            return self.get_samples_test(root)
 
-    # def get_samples(self, root):
-    #     samples = []
-    #     for card_type in os.listdir(root):
-    #         id_class = CardID[card_type].value
-    #         card_path = os.path.join(root, card_type)
+    def get_samples_train(self, root):
+        samples = []
+        for card_type in os.listdir(root):
+            id_class = CardID[card_type].value
+            card_path = os.path.join(root, card_type)
 
-    #         for quality_type in os.listdir(card_path):
-    #             quality_path = os.path.join(card_path, quality_type)
+            for quality_type in os.listdir(card_path):
+                quality_path = os.path.join(card_path, quality_type)
 
-    #             for file in os.listdir(quality_path):
-    #                 filename = os.fsdecode(file)
-    #                 if is_image_file(filename):
-    #                     path = os.path.join(quality_path, filename)
-    #                     samples.append((path, id_class))
-    #     return samples
+                for file in os.listdir(quality_path):
+                    filename = os.fsdecode(file)
+                    if is_image_file(filename):
+                        path = os.path.join(quality_path, filename)
+                        samples.append((path, id_class))
+        return samples
     
-    def get_samples(self, root):
+    def get_samples_test(self, root):
         samples = []
         for card_type in os.listdir(root):
             id_class = CardID[card_type].value

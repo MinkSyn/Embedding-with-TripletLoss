@@ -64,7 +64,7 @@ class PatchCoreEvaluate:
         return model
 
     def get_loader(self, batch_size, transform):
-        dataset = PatchCoreDataset(self.root, transform)
+        dataset = PatchCoreDataset(split='test', root=self.root, transforms=transform)
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
         split = int(np.floor(0.2 * dataset_size))

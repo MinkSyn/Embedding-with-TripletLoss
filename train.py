@@ -81,6 +81,7 @@ class Trainer:
     def get_loaders(self):
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
         train_ds = PatchCoreDataset(
+            split='train',
             root=self.data_root,
             transforms=tfms,
         )
