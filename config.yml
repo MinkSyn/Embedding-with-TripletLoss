@@ -3,21 +3,22 @@ run: 1
 
 device: cuda
 
-data_ver: v3.6
+data_ver: image_net
 
 root:
-  data: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  test: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  out: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  ckpt: D:/datasets/Anodet_ICQC/RealAD_v2.1
+  data: /home/database/{data_ver} #Need 2 folder are train & val
+  test: /home/database/private_test
+  out: /home/database/results
+  ckpt: /home/database/checkpoints
   
-num_classes: 6
+num_classes: 2
 
 model:
-  arch: resnet50
-  img_size:
+  arch: resnet18
+  img_size: # Must be = IMG_SIZE in const.py (May be remove but custom transform in tool.py)
     width: 450
     height: 300
+  pretrained: True
 
 dataloader:
   batch_size: 32
@@ -26,18 +27,11 @@ dataloader:
 
 hparams:
   num_epochs: 30
-  early_stopping: 0.001
-
-arcface:
-  algo: arc
-  params:
-    s: 30
-    m: 0.5
-    easy_margin: False
+  early_stopping: 3
 
 loss:
   algo: cross
-  # algo: triplet
+  # algo: focal
 
 optimizer:
   algo: sgd

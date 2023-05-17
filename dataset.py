@@ -4,7 +4,7 @@ from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from const import CardID
+from const import FolderID, QualityID
 from tool import is_image_file
 
 
@@ -21,15 +21,15 @@ class PatchCoreDataset(Dataset):
         self.samples = self.get_samples(split, root)
         
     def get_samples(self, split, root):
-        if split == 'train':
-            return self.get_samples_train(root)
-        elif split == 'test':
-            return self.get_samples_test(root)
+        if split == 'folders':
+            return self.get_samples_folders(root)
+        elif split == 'instances':
+            return self.get_samples_instances(root)
 
-    def get_samples_train(self, root):
+    def get_samples_folders(self, root):
         samples = []
         for card_type in os.listdir(root):
-            id_class = CardID[card_type].value
+            id_class = FolderID[card_type].value
             card_path = os.path.join(root, card_type)
 
             for quality_type in os.listdir(card_path):
@@ -42,10 +42,10 @@ class PatchCoreDataset(Dataset):
                         samples.append((path, id_class))
         return samples
     
-    def get_samples_test(self, root):
+    def get_samples_instances(self, root):
         samples = []
         for card_type in os.listdir(root):
-            id_class = CardID[card_type].value
+            id_class = QualityID[card_type].value
             card_path = os.path.join(root, card_type)
 
             for file in os.listdir(card_path):
