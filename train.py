@@ -8,12 +8,11 @@ from loguru import logger
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from arcface import AddMarginProduct, ArcMarginProduct, SphereProduct
+from loss import AddMarginProduct, ArcMarginProduct, SphereProduct
 from config import Config
 from const import STATS
-from loss import TripletLoss
 from dataset import PatchCoreDataset
-from model import ResNet50_v4
+from model import resnet_face18
 from evaluate import PatchCoreEvaluate
 from tool import get_tfms, verify_device
 
@@ -32,7 +31,7 @@ class Trainer:
         self.data_ver = cfg['data_ver']
         self.run_name = f"{self.model_arch}__{self.data_ver}"
 
-        model = ResNet50_v4(arch=self.model_arch, pretrained=True, testing=False)
+        model = resnet_face18(use_se=True)
         self.model = model.to(self.device)
 
         self.data_root = cfg['root']['data']
@@ -84,7 +83,7 @@ class Trainer:
     def get_loaders(self):
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
         train_ds = PatchCoreDataset(
-            split='train',
+            split='test',
             root=self.data_root,
             transforms=tfms,
         )
@@ -227,8 +226,8 @@ class Trainer:
     def get_loss_func(self, loss_name):
         if loss_name == 'cross':
             return torch.nn.CrossEntropyLoss()
-        elif loss_name == 'cross':
-            return TripletLoss(self.device)
+        # elif loss_name == 'cross':
+        #     return TripletLoss(self.device)
         # elif loss_name == 'focal':
         #     return FocalLoss(gamma=2)
         else:

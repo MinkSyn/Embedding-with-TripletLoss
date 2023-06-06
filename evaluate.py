@@ -11,7 +11,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
 from dataset import PatchCoreDataset
-from model import ResNet50_v4
+from model import resnet_face18
 from tool import get_tfms
 
 DATA_ROOT = 'D:/datasets/Anodet_ICQC/Testing/Syn_v3.6'
@@ -57,11 +57,21 @@ class PatchCoreEvaluate:
         if not os.path.exists(weight_path):
             raise Exception(f'Not exits path: {weight_path}')
         print(f"Loading PatchCore checkpoint {weight_path} ...")
-        ckpt = torch.load(weight_path, map_location=self.device)
+        model_state = torch.load(weight_path, map_location=self.device)
         
-        model = ResNet50_v4(arch=ckpt['arch'], testing=False)
+        model = resnet_face18(use_se=True)
+        try:
+            model.load_state_dict(model_state)
+        except: 
+            from collections import OrderedDict
+            new_state_dict = OrderedDict()
+            for k, v in model_state.items():
+                name = k.replace('module.', '', 1)
+                # name = k.replace('model.', '', 1)
+                new_state_dict[name] = v
+            model.load_state_dict(new_state_dict)
+            
         model = model.to(self.device)
-        model.load_state_dict(ckpt['model_state'])
         model.eval()
         return model
 

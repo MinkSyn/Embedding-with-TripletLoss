@@ -1,142 +1,155 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
+from torch.nn import Parameter
+import math
 
 
-def pairwise_distance_torch(embeddings, device):
-    """Computes the pairwise distance matrix with numerical stability.
-    output[i, j] = || feature[i, :] - feature[j, :] ||_2
+class ArcMarginProduct(nn.Module):
+    """Implement of large margin arc distance: :
+        Args:
+            in_features: size of each input sample
+            out_features: size of each output sample
+            s: norm of input feature
+            m: margin
+            cos(theta + m)
+        """
+    def __init__(self, in_features, out_features, s=30.0, m=0.50, easy_margin=False):
+        super(ArcMarginProduct, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.s = s
+        self.m = m
+        self.weight = Parameter(torch.FloatTensor(out_features, in_features))
+        nn.init.xavier_uniform_(self.weight)
+
+        self.easy_margin = easy_margin
+        self.cos_m = math.cos(m)
+        self.sin_m = math.sin(m)
+        self.th = math.cos(math.pi - m)
+        self.mm = math.sin(math.pi - m) * m
+
+    def forward(self, input, label):
+        # --------------------------- cos(theta) & phi(theta) ---------------------------
+        cosine = F.linear(F.normalize(input), F.normalize(self.weight))
+        sine = torch.sqrt((1.0 - torch.pow(cosine, 2)).clamp(0, 1))
+        phi = cosine * self.cos_m - sine * self.sin_m
+        if self.easy_margin:
+            phi = torch.where(cosine > 0, phi, cosine)
+        else:
+            phi = torch.where(cosine > self.th, phi, cosine - self.mm)
+        # --------------------------- convert label to one-hot ---------------------------
+        # one_hot = torch.zeros(cosine.size(), requires_grad=True, device='cuda')
+        one_hot = torch.zeros(cosine.size(), device='cuda')
+        one_hot.scatter_(1, label.view(-1, 1).long(), 1)
+        # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
+        output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
+        output *= self.s
+        # print(output)
+
+        return output
+
+
+class AddMarginProduct(nn.Module):
+    r"""Implement of large margin cosine distance: :
     Args:
-      embeddings: 2-D Tensor of size [number of data, feature dimension].
-    Returns:
-      pairwise_distances: 2-D Tensor of size [number of data, number of data].
+        in_features: size of each input sample
+        out_features: size of each output sample
+        s: norm of input feature
+        m: margin
+        cos(theta) - m
     """
 
-    # pairwise distance matrix with precise embeddings
-    precise_embeddings = embeddings.to(dtype=torch.float32)
+    def __init__(self, in_features, out_features, s=30.0, m=0.40):
+        super(AddMarginProduct, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.s = s
+        self.m = m
+        self.weight = Parameter(torch.FloatTensor(out_features, in_features))
+        nn.init.xavier_uniform_(self.weight)
 
-    c1 = torch.pow(precise_embeddings, 2).sum(axis=-1)
-    c2 = torch.pow(precise_embeddings.transpose(0, 1), 2).sum(axis=0)
-    c3 = precise_embeddings @ precise_embeddings.transpose(0, 1)
+    def forward(self, input, label):
+        # --------------------------- cos(theta) & phi(theta) ---------------------------
+        cosine = F.linear(F.normalize(input), F.normalize(self.weight))
+        phi = cosine - self.m
+        # --------------------------- convert label to one-hot ---------------------------
+        one_hot = torch.zeros(cosine.size(), device='cuda')
+        # one_hot = one_hot.cuda() if cosine.is_cuda else one_hot
+        one_hot.scatter_(1, label.view(-1, 1).long(), 1)
+        # -------------torch.where(out_i = {x_i if condition_i else y_i) -------------
+        output = (one_hot * phi) + ((1.0 - one_hot) * cosine)  # you can use torch.where if your torch.__version__ is 0.4
+        output *= self.s
+        # print(output)
 
-    c1 = c1.reshape((c1.shape[0], 1))
-    c2 = c2.reshape((1, c2.shape[0]))
-    c12 = c1 + c2
-    pairwise_distances_squared = c12 - 2.0 * c3
+        return output
 
-    # Deal with numerical inaccuracies. Set small negatives to zero.
-    pairwise_distances_squared = torch.max(
-        pairwise_distances_squared, torch.tensor([0.0]).to(device)
-    )
-    # Get the mask where the zero distances are at.
-    error_mask = pairwise_distances_squared.clone()
-    error_mask[error_mask > 0.0] = 1.0
-    error_mask[error_mask <= 0.0] = 0.0
-
-    pairwise_distances = torch.mul(pairwise_distances_squared, error_mask)
-
-    # Explicitly set diagonals to zero.
-    mask_offdiagonals = torch.ones(
-        (pairwise_distances.shape[0], pairwise_distances.shape[1])
-    ) - torch.diag(torch.ones(pairwise_distances.shape[0]))
-    pairwise_distances = torch.mul(
-        pairwise_distances.to(device), mask_offdiagonals.to(device)
-    )
-    return pairwise_distances
+    def __repr__(self):
+        return self.__class__.__name__ + '(' \
+               + 'in_features=' + str(self.in_features) \
+               + ', out_features=' + str(self.out_features) \
+               + ', s=' + str(self.s) \
+               + ', m=' + str(self.m) + ')'
 
 
-def TripletSemiHardLoss(y_true, y_pred, device, margin=1.0):
-    """Computes the triplet loss_functions with semi-hard negative mining.
-    The loss_functions encourages the positive distances (between a pair of embeddings
-    with the same labels) to be smaller than the minimum negative distance
-    among which are at least greater than the positive distance plus the
-    margin constant (called semi-hard negative) in the mini-batch.
-    If no such negative exists, uses the largest negative distance instead.
-    See: https://arxiv.org/abs/1503.03832.
-    We expect labels `y_true` to be provided as 1-D integer `Tensor` with shape
-    [batch_size] of multi-class integer labels. And embeddings `y_pred` must be
-    2-D float `Tensor` of l2 normalized embedding vectors.
+class SphereProduct(nn.Module):
+    r"""Implement of large margin cosine distance: :
     Args:
-      margin: Float, margin term in the loss_functions definition. Default value is 1.0.
-      name: Optional name for the op.
+        in_features: size of each input sample
+        out_features: size of each output sample
+        m: margin
+        cos(m*theta)
     """
+    def __init__(self, in_features, out_features, m=4):
+        super(SphereProduct, self).__init__()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.m = m
+        self.base = 1000.0
+        self.gamma = 0.12
+        self.power = 1
+        self.LambdaMin = 5.0
+        self.iter = 0
+        self.weight = Parameter(torch.FloatTensor(out_features, in_features))
+        nn.init.xavier_uniform(self.weight)
 
-    labels, embeddings = y_true, y_pred
+        # duplication formula
+        self.mlambda = [
+            lambda x: x ** 0,
+            lambda x: x ** 1,
+            lambda x: 2 * x ** 2 - 1,
+            lambda x: 4 * x ** 3 - 3 * x,
+            lambda x: 8 * x ** 4 - 8 * x ** 2 + 1,
+            lambda x: 16 * x ** 5 - 20 * x ** 3 + 5 * x
+        ]
 
-    # Reshape label tensor to [batch_size, 1].
-    lshape = labels.shape
-    labels = torch.reshape(labels, [lshape[0], 1])
+    def forward(self, input, label):
+        # lambda = max(lambda_min,base*(1+gamma*iteration)^(-power))
+        self.iter += 1
+        self.lamb = max(self.LambdaMin, self.base * (1 + self.gamma * self.iter) ** (-1 * self.power))
 
-    pdist_matrix = pairwise_distance_torch(embeddings, device)
+        # --------------------------- cos(theta) & phi(theta) ---------------------------
+        cos_theta = F.linear(F.normalize(input), F.normalize(self.weight))
+        cos_theta = cos_theta.clamp(-1, 1)
+        cos_m_theta = self.mlambda[self.m](cos_theta)
+        theta = cos_theta.data.acos()
+        k = (self.m * theta / 3.14159265).floor()
+        phi_theta = ((-1.0) ** k) * cos_m_theta - 2 * k
+        NormOfFeature = torch.norm(input, 2, 1)
 
-    # Build pairwise binary adjacency matrix.
-    adjacency = torch.eq(labels, labels.transpose(0, 1))
-    # Invert so we can select negatives only.
-    adjacency_not = adjacency.logical_not()
+        # --------------------------- convert label to one-hot ---------------------------
+        one_hot = torch.zeros(cos_theta.size())
+        one_hot = one_hot.cuda() if cos_theta.is_cuda else one_hot
+        one_hot.scatter_(1, label.view(-1, 1), 1)
 
-    batch_size = labels.shape[0]
+        # --------------------------- Calculate output ---------------------------
+        output = (one_hot * (phi_theta - cos_theta) / (1 + self.lamb)) + cos_theta
+        output *= NormOfFeature.view(-1, 1)
 
-    # Compute the mask.
-    pdist_matrix_tile = pdist_matrix.repeat(batch_size, 1)
-    adjacency_not_tile = adjacency_not.repeat(batch_size, 1)
+        return output
 
-    transpose_reshape = pdist_matrix.transpose(0, 1).reshape(-1, 1)
-    greater = pdist_matrix_tile > transpose_reshape
-
-    mask = adjacency_not_tile & greater
-
-    # final mask
-    mask_step = mask.to(dtype=torch.float32)
-    mask_step = mask_step.sum(axis=1)
-    mask_step = mask_step > 0.0
-    mask_final = mask_step.reshape(batch_size, batch_size)
-    mask_final = mask_final.transpose(0, 1)
-
-    adjacency_not = adjacency_not.to(dtype=torch.float32)
-    mask = mask.to(dtype=torch.float32)
-
-    # negatives_outside: smallest D_an where D_an > D_ap.
-    axis_maximums = torch.max(pdist_matrix_tile, dim=1, keepdim=True)
-    masked_minimums = (
-        torch.min(
-            torch.mul(pdist_matrix_tile - axis_maximums[0], mask), dim=1, keepdim=True
-        )[0]
-        + axis_maximums[0]
-    )
-    negatives_outside = masked_minimums.reshape([batch_size, batch_size])
-    negatives_outside = negatives_outside.transpose(0, 1)
-
-    # negatives_inside: largest D_an.
-    axis_minimums = torch.min(pdist_matrix, dim=1, keepdim=True)
-    masked_maximums = (
-        torch.max(
-            torch.mul(pdist_matrix - axis_minimums[0], adjacency_not),
-            dim=1,
-            keepdim=True,
-        )[0]
-        + axis_minimums[0]
-    )
-    negatives_inside = masked_maximums.repeat(1, batch_size)
-
-    semi_hard_negatives = torch.where(mask_final, negatives_outside, negatives_inside)
-
-    loss_mat = margin + pdist_matrix - semi_hard_negatives
-
-    mask_positives = adjacency.to(dtype=torch.float32) - torch.diag(
-        torch.ones(batch_size)
-    ).to(device)
-    num_positives = mask_positives.sum()
-
-    triplet_loss = (
-        torch.max(torch.mul(loss_mat, mask_positives), torch.tensor([0.0]).to(device))
-    ).sum() / num_positives
-    triplet_loss = triplet_loss.to(dtype=embeddings.dtype)
-    return triplet_loss
-
-
-class TripletLoss(nn.Module):
-    def __init__(self, device):
-        super().__init__()
-        self.device = device
-
-    def forward(self, input, target, **kwargs):
-        return TripletSemiHardLoss(target, input, self.device)
+    def __repr__(self):
+        return self.__class__.__name__ + '(' \
+               + 'in_features=' + str(self.in_features) \
+               + ', out_features=' + str(self.out_features) \
+               + ', m=' + str(self.m) + ')'

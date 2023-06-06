@@ -44,8 +44,9 @@ class PatchCoreDataset(Dataset):
     
     def get_samples_test(self, root):
         samples = []
-        for card_type in os.listdir(root):
-            id_class = CardID[card_type].value
+        id_class = 0
+        for card_type in sorted(os.listdir(root)):
+            # id_class = CardID[card_type].value
             card_path = os.path.join(root, card_type)
 
             for file in os.listdir(card_path):
@@ -53,6 +54,7 @@ class PatchCoreDataset(Dataset):
                 if is_image_file(filename):
                     path = os.path.join(card_path, filename)
                     samples.append((path, id_class))
+            id_class += 1
         return samples
 
     def __len__(self):
