@@ -6,27 +6,27 @@ device: cuda
 data_ver: imagenet
 
 root:
-  data: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  test: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  out: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  ckpt: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  
-num_classes: 6
+  data: /kaggle/input/mutiple-face/vn_celeb/muticle_case  #root train(not mask vn-celeb)
+  test: /kaggle/input/mutiple-face/origin_celeb_face/muticale_case #root test(not mask origin-celeb-face)
+  out: /kaggle/working/result
+  ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth # link resnet18.110pth kaggle
+
+num_classes: 1020
 
 model:
-  arch: resnet50
+  arch: resnet18
   img_size:
     width: 450
     height: 300
 
 dataloader:
-  batch_size: 32
+  batch_size: 128
   num_workers: 2
   pin_memory: true
 
 hparams:
-  num_epochs: 30
-  early_stopping: 0.001
+  num_epochs: 20
+  early_stopping: 0.00001
 
 arcface:
   algo: arc
