@@ -16,8 +16,8 @@ num_classes: 1020
 model:
   arch: resnet18
   img_size:
-    width: 450
-    height: 300
+    width: 128
+    height: 128
 
 dataloader:
   batch_size: 128
