@@ -6,8 +6,8 @@ device: cuda
 data_ver: imagenet
 
 root:
-  data: /kaggle/input/mutiple-face/vn_celeb/muticle_case  #root train(not mask vn-celeb)
-  test: /kaggle/input/mutiple-face/origin_celeb_face/muticale_case #root test(not mask origin-celeb-face)
+  data: /kaggle/input/vn-celeb/VN_celeb/not_mask  #root train(not mask vn-celeb)
+  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask #root test(not mask origin-celeb-face)
   out: /kaggle/working/result
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth # link resnet18.110pth kaggle
 
