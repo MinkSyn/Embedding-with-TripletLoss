@@ -1,6 +1,6 @@
 import os
 
-from PIL import Image
+from PIL import Image, ImageOps
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -63,10 +63,11 @@ class ArcfaceDataset(Dataset):
     def __getitem__(self, idx):
         path, target = self.samples[idx]
 
-        with open(path, 'rb') as f:
-            img = Image.open(f).convert('L')
+        with open(path, 'r') as f:
+            img = Image.open(f)
+            img_gray = ImageOps.grayscale(img)
 
         if self.transforms is not None:
-            img = self.transforms(img)
+            img = self.transforms(img_gray)
 
         return img, target
