@@ -6,11 +6,11 @@ device: cuda
 data_ver: imagenet
 
 root:
-  data: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  test: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  out: /kaggle/working/results
-  ckpt: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  
+data: /kaggle/input/vn-celeb/VN_celeb/not_mask  #root train(not mask vn-celeb)
+  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask #root test(not mask origin-celeb-face)
+  out: /kaggle/working/result
+  ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth # link resnet18.110pth kaggle
+
 num_classes: 6 # Number classes of VNceleb
 
 model:
