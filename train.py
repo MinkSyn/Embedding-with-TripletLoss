@@ -13,6 +13,7 @@ from config import Config
 from const import STATS
 from dataset import ArcfaceDataset
 from model import resnet_face18
+from torch.nn import DataParallel
 from evaluate import ArcfaceEvaluate
 from tool import get_tfms, verify_device
 
@@ -32,6 +33,7 @@ class Trainer:
         self.run_name = f"{self.model_arch}__{self.data_ver}"
 
         model = resnet_face18(use_se=True)
+        model = DataParallel(model)
         self.model = model.to(self.device)
 
         self.data_root = cfg['root']['data']
