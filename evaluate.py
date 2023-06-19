@@ -10,7 +10,7 @@ from sklearn.svm import SVC, LinearSVC
 from torch.utils.data import DataLoader
 from torch.utils.data.sampler import SubsetRandomSampler
 
-from dataset import PatchCoreDataset
+from dataset import ArcfaceDataset
 from model import resnet_face18
 from tool import get_tfms
 
@@ -53,7 +53,7 @@ class ArcfaceEvaluate:
     def load_model(self, weight_path):
         if not os.path.exists(weight_path):
             raise Exception(f'Not exits path: {weight_path}')
-        print(f"Loading PatchCore checkpoint {weight_path} ...")
+        print(f"Loading Model checkpoint {weight_path} ...")
         model_state = torch.load(weight_path, map_location=self.device)
         
         model = resnet_face18(use_se=True)
@@ -73,7 +73,7 @@ class ArcfaceEvaluate:
         return model
 
     def get_loader(self, batch_size, transform):
-        dataset = PatchCoreDataset(split='test', root=self.root, transforms=transform)
+        dataset = ArcfaceDataset(split='test', root=self.root, transforms=transform)
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
         split = int(np.floor(0.2 * dataset_size))
