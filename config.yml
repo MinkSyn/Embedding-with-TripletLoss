@@ -7,7 +7,7 @@ data_ver: imagenet
 
 root:
   data: /kaggle/input/vn-celeb/VN_celeb/mask
-  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask
+  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/mask
   out: /kaggle/working/results
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth
   

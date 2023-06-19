@@ -32,9 +32,7 @@ class Trainer:
         self.data_ver = cfg['data_ver']
         self.run_name = f"{self.model_arch}__{self.data_ver}"
 
-        model = resnet_face18(use_se=True)
-        model = DataParallel(model)
-        self.model = model.to(self.device)
+        self.model = self.load_model(cfg['root']['ckpt'])
 
         self.data_root = cfg['root']['data']
         self.test_dir = cfg['root']['test']
@@ -81,6 +79,26 @@ class Trainer:
         os.makedirs(self.embedding_root, exist_ok=True)
         if cfg['root']['ckpt'] is not None:
             self.ckpt_path = cfg['root']['ckpt']
+            
+    def load_model(self, weight_path):
+        model = resnet_face18(use_se=True)
+        model = DataParallel(model)
+        model_state = torch.load(weight_path, map_location=self.device)
+
+        try:
+            model.load_state_dict(model_state)
+        except:
+            from collections import OrderedDict
+
+            new_state_dict = OrderedDict()
+            for k, v in model_state.items():
+                name = k.replace('module.', '', 1)
+                new_state_dict[name] = v
+            model.load_state_dict(new_state_dict)
+            
+        model.to(self.device)
+        model.eval()
+        return model
 
     def get_loaders(self):
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)

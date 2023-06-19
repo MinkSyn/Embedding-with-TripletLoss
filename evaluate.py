@@ -1,5 +1,6 @@
 import os
 
+import cv2
 import numpy as np
 import pandas as pd
 import torch
@@ -88,11 +89,31 @@ class ArcfaceEvaluate:
         train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
         val_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
         return train_loader, val_loader
+    
+    def _preprocess(self, input):
+        if isinstance(input, str):  # path
+            input = cv2.imread(input, 0)
+        elif isinstance(input, np.ndarray):
+            input = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
+
+        img_resize = cv2.resize(input, (self.img_size))
+        img_lst = np.dstack((img_resize, np.fliplr(img_resize)))
+        img_lst = img_lst.transpose((2, 0, 1))
+        img_lst = img_lst[:, np.newaxis, :, :]
+        image_nor = img_lst.astype(np.float32, copy=False)
+
+        image_nor -= 127.5
+        image_nor /= 127.5
+
+        img_tensor = torch.from_numpy(image_nor)
+        img_tensor = img_tensor.to(self.device)
+        return img_tensor
 
     def embedding_dataset(self):
         self.model.eval()
         torch.cuda.empty_cache()
         for idx, (input, target) in enumerate(self.train_loader):
+            # input = self._preprocess(input)
             input = input.to(self.device)
             output = self.model(input)
             output = output.detach().cpu()
