@@ -74,7 +74,7 @@ class Trainer:
 
         self.weights_dir = f"{self.out_root}/weights"
         os.makedirs(self.weights_dir, exist_ok=True)
-        
+
         self.embedding_root = f"{self.out_root}/res_embedding"
         os.makedirs(self.embedding_root, exist_ok=True)
         if cfg['root']['ckpt'] is not None:
@@ -176,12 +176,12 @@ class Trainer:
             # logger.info(epoch_info)
             print(epoch_info)
 
-            
+
             logger.info(f"Save checkpoints for epoch {epoch + 1}.")
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
-            
+
             # Checkpoints
             torch.save(
                 {
@@ -259,7 +259,7 @@ class Trainer:
             return torch.optim.lr_scheduler.StepLR
         else:
             raise NotImplementedError
-        
+
     def _get_criterion(self, crit_name=None):
         if crit_name == 'focal':
             # https://github.com/AdeelH/pytorch-multi-class-focal-loss

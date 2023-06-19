@@ -11,7 +11,7 @@ data: /kaggle/input/vn-celeb/VN_celeb/not_mask  #root train(not mask vn-celeb)
   out: /kaggle/working/result
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth # link resnet18.110pth kaggle
 
-num_classes: 6 # Number classes of VNceleb
+num_classes: 1020 # Number classes of VNceleb
 
 model:
   arch: resnet18

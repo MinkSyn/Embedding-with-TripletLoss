@@ -55,11 +55,11 @@ class ArcfaceEvaluate:
             raise Exception(f'Not exits path: {weight_path}')
         print(f"Loading Model checkpoint {weight_path} ...")
         model_state = torch.load(weight_path, map_location=self.device)
-        
+
         model = resnet_face18(use_se=True)
         try:
             model.load_state_dict(model_state)
-        except: 
+        except:
             from collections import OrderedDict
             new_state_dict = OrderedDict()
             for k, v in model_state.items():
@@ -67,7 +67,7 @@ class ArcfaceEvaluate:
                 # name = k.replace('model.', '', 1)
                 new_state_dict[name] = v
             model.load_state_dict(new_state_dict)
-            
+
         model = model.to(self.device)
         model.eval()
         return model
@@ -151,11 +151,11 @@ class ArcfaceEvaluate:
             'valid datasets': embedding_val.shape,
             'valid labels': target_val.shape,
         }
-        
+
         print('Size of embedding:')
         print(pd.DataFrame({"size": size_dict.values()}, index=size_dict.keys()))
         print(("-" * 80))
-        
+
         print('KNN classification:')
         self.KNN_classify.fit(embedding_train, target_train)
         KNN_pred = self.KNN_classify.score(embedding_val, target_val)
