@@ -20,12 +20,12 @@ model:
     height: 128
 
 dataloader:
-  batch_size: 64
+  batch_size: 128
   num_workers: 2
   pin_memory: true
 
 hparams:
-  num_epochs: 30
+  num_epochs: 100
   early_stopping: 0.0001
 
 arcface:
@@ -42,7 +42,7 @@ loss:
 optimizer:
   algo: sgd
   hparams:
-    lr: 0.01
+    lr: 0.05
     weight_decay: 0.0001
     momentum: 0.9
 
