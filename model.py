@@ -332,5 +332,5 @@ def resnet152(pretrained=False, **kwargs):
 
 
 def resnet_face18(use_se=True, **kwargs):
-    self.conv1 = nn.Conv2d(3, 64, kernel_size=3, padding=1, bias=False)
+    model = ResNetFace(IRBlock, [2, 2, 2, 2], use_se=use_se, **kwargs)
     return model
