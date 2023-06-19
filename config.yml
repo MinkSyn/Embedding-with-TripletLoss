@@ -6,9 +6,9 @@ device: cuda
 data_ver: imagenet
 
 root:
-data: /kaggle/input/vn-celeb/VN_celeb/not_mask  #root train(not mask vn-celeb)
+  data: /kaggle/input/vn-celeb/VN_celeb/not_mask  #root train(not mask vn-celeb)
   test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask #root test(not mask origin-celeb-face)
-  out: /kaggle/working/result
+  out: /kaggle/working/results
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth # link resnet18.110pth kaggle
 
 num_classes: 1020 # Number classes of VNceleb
