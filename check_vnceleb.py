@@ -3,7 +3,7 @@ from PIL import Image, ImageOps
 
 from tool import get_tfms
 
-ROOT_PATH = ''
+ROOT_PATH = '/kaggle/input/vn-celeb/VN_celeb/not_mask'
 
 transforms = get_tfms()
 
