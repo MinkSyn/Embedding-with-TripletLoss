@@ -64,7 +64,7 @@ class ArcfaceDataset(Dataset):
         path, target = self.samples[idx]
 
         with open(path, 'rb') as f:
-            img = Image.open(f).convert('RGB')
+            img = Image.open(f).convert('L')
 
         if self.transforms is not None:
             img = self.transforms(img)
