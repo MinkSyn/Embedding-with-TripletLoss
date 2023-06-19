@@ -158,11 +158,11 @@ class Trainer:
             self.model.train()
             train_losses = []
 
-            for i, batch in enumerate(
-                tqdm(train_dl, desc=f"Training epoch {(epoch + 1):>2d}")
-            ):
-            # logger.info(f"Training epoch {(epoch + 1):>2d}")
-            # for i, batch in enumerate(train_dl):
+            # for i, batch in enumerate(
+            #     tqdm(train_dl, desc=f"Training epoch {(epoch + 1):>2d}")
+            # ):
+            logger.info(f"Training epoch {(epoch + 1):>2d}")
+            for i, batch in enumerate(train_dl):
                 input, target = batch
                 input = input.to(self.device)
                 target = target.to(self.device)
