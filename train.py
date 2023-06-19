@@ -199,21 +199,21 @@ class Trainer:
                 weight_path,
             )
             # Evaluate
-            if (epoch + 1) % 3== 0:
-                with torch.no_grad():
-                    eval = ArcfaceEvaluate(
-                        root=self.test_dir,
-                        out_root=self.embedding_root,
-                        weight_path=None,
-                        epoch=epoch,
-                        model=self.model,
-                        img_size=self.img_size,
-                        device=self.device,
-                        batch_size=self.batch_size,
-                        norm_stats=self.norm_stats,
-                    )
-                    eval.embedding_dataset()
-                    eval.clasification()
+            # if (epoch + 1) % 3== 0:
+            with torch.no_grad():
+                eval = ArcfaceEvaluate(
+                    root=self.test_dir,
+                    out_root=self.embedding_root,
+                    weight_path=None,
+                    epoch=epoch,
+                    model=self.model,
+                    img_size=self.img_size,
+                    device=self.device,
+                    batch_size=self.batch_size,
+                    norm_stats=self.norm_stats,
+                )
+                eval.embedding_dataset()
+                eval.clasification()
                     # logger.info("-" * 20)
             print(("-" * 80))
 
