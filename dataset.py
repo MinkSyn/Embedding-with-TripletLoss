@@ -63,11 +63,11 @@ class ArcfaceDataset(Dataset):
     def __getitem__(self, idx):
         path, target = self.samples[idx]
 
-        with open(path, 'r') as f:
-            img = Image.open(f)
+        with open(path, 'rb') as f:
+            img = Image.open(f).convert('RGB')
             img_gray = ImageOps.grayscale(img)
 
         if self.transforms is not None:
-            img = self.transforms(img_gray)
+            img_trans = self.transforms(img_gray)
 
-        return img, target
+        return img_trans, target
