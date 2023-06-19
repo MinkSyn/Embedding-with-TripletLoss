@@ -81,7 +81,7 @@ class Trainer:
             self.ckpt_path = cfg['root']['ckpt']
             
     def load_model(self, weight_path):
-        model = resnet_face18(use_se=True)
+        model = resnet_face18(use_se=False)
         model = DataParallel(model)
         model_state = torch.load(weight_path, map_location=self.device)
 
