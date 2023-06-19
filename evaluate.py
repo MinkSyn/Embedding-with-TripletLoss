@@ -40,7 +40,7 @@ class ArcfaceEvaluate:
         else:
             self.model = model
 
-        transform = get_tfms(img_size=img_size, norm_stats=norm_stats)
+        transform = get_tfms(img_size=img_size, phase='test', norm_stats=norm_stats)
         self.train_loader, self.val_loader = self.get_loader(
             batch_size=batch_size, transform=transform
         )

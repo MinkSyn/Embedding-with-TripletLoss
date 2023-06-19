@@ -21,17 +21,23 @@ def is_image_file(filename: str):
     return filename.lower().endswith(IMG_EXTENSIONS)
 
 
-def get_tfms(img_size=None, norm_stats=None):
-    tfms = [T.ToTensor()]
-    if img_size is None:
-        img_size = IMG_SIZE
-    if isinstance(img_size, int):
-        tfms.append(T.Resize((img_size, img_size)))
-    elif isinstance(img_size, (list, tuple)):
-        tfms.append(T.Resize(img_size))
-    if norm_stats is not None:
-        tfms.append(T.Normalize(*norm_stats))
-    return T.Compose(tfms)
+def get_tfms(img_size=(128, 128), phase='train', norm_stats=None):
+    normalize = T.Normalize(mean=[0.5], std=[0.5])
+
+    if phase == 'train':
+        transforms = T.Compose([
+            T.RandomCrop((128, 128)),
+            T.RandomHorizontalFlip(),
+            T.ToTensor(),
+            normalize
+        ])
+    else:
+        transforms = T.Compose([
+            T.CenterCrop((128, 128)),
+            T.ToTensor(),
+            normalize
+        ])
+    return transforms
 
 
 def to_device(data, device):
