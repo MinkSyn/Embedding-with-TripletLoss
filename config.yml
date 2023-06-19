@@ -8,25 +8,25 @@ data_ver: imagenet
 root:
   data: D:/datasets/Anodet_ICQC/RealAD_v2.1
   test: D:/datasets/Anodet_ICQC/RealAD_v2.1
-  out: D:/datasets/Anodet_ICQC/RealAD_v2.1
+  out: /kaggle/working/results
   ckpt: D:/datasets/Anodet_ICQC/RealAD_v2.1
   
-num_classes: 6
+num_classes: 6 # Number classes of VNceleb
 
 model:
-  arch: resnet50
+  arch: resnet18
   img_size:
-    width: 450
-    height: 300
+    width: 128
+    height: 128
 
 dataloader:
-  batch_size: 32
+  batch_size: 64
   num_workers: 2
   pin_memory: true
 
 hparams:
   num_epochs: 30
-  early_stopping: 0.001
+  early_stopping: 0.0001
 
 arcface:
   algo: arc
@@ -36,13 +36,13 @@ arcface:
     easy_margin: False
 
 loss:
-  algo: cross
-  # algo: triplet
+  # algo: cross
+  algo: focal
 
 optimizer:
   algo: sgd
   hparams:
-    lr: 0.05
+    lr: 0.01
     weight_decay: 0.0001
     momentum: 0.9
 

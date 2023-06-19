@@ -14,11 +14,8 @@ from dataset import PatchCoreDataset
 from model import resnet_face18
 from tool import get_tfms
 
-DATA_ROOT = 'D:/datasets/Anodet_ICQC/Testing/Syn_v3.6'
-EMBED_DIR = f'E:/PatchCore-Private/embedding'
 
-
-class PatchCoreEvaluate:
+class ArcfaceEvaluate:
     def __init__(
         self,
         root,
@@ -27,9 +24,9 @@ class PatchCoreEvaluate:
         weight_path,
         device,
         model=None,
-        img_size=(300, 450),
+        img_size=(128, 128),
         batch_size=16,
-        norm_stats='patchcore_v3.6',
+        norm_stats='imagenet',
     ):
         self.device = device
         self.root = root

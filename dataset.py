@@ -8,7 +8,7 @@ from const import CardID
 from tool import is_image_file
 
 
-class PatchCoreDataset(Dataset):
+class ArcfaceDataset(Dataset):
     def __init__(
         self,
         split,

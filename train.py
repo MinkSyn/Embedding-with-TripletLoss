@@ -11,9 +11,9 @@ from tqdm import tqdm
 from loss import AddMarginProduct, ArcMarginProduct, SphereProduct
 from config import Config
 from const import STATS
-from dataset import PatchCoreDataset
+from dataset import ArcfaceDataset
 from model import resnet_face18
-from evaluate import PatchCoreEvaluate
+from evaluate import ArcfaceEvaluate
 from tool import get_tfms, verify_device
 
 torch.manual_seed(1235)
@@ -60,7 +60,7 @@ class Trainer:
         self.optimizer = self._get_optim(cfg['optimizer']['algo'])
         self.optim_hp = cfg['optimizer']['hparams']
 
-        self.criterion = self.get_loss_func(cfg['loss']['algo'])
+        self.criterion = self._get_criterion(cfg['loss']['algo'])
 
         if 'scheduler' in cfg.keys():
             self.sched_algo = cfg['scheduler']['algo']
@@ -82,7 +82,7 @@ class Trainer:
 
     def get_loaders(self):
         tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
-        train_ds = PatchCoreDataset(
+        train_ds = ArcfaceDataset(
             split='test',
             root=self.data_root,
             transforms=tfms,
@@ -199,7 +199,7 @@ class Trainer:
             # Evaluate
             if (epoch + 1) % 3== 0:
                 with torch.no_grad():
-                    eval = PatchCoreEvaluate(
+                    eval = ArcfaceEvaluate(
                         root=self.test_dir,
                         out_root=self.embedding_root,
                         weight_path=None,
@@ -222,16 +222,6 @@ class Trainer:
 
         train_time = time.strftime('%H:%M:%S', time.gmtime(time.time() - train_time))
         logger.info(f"Total training time: {train_time}")
-
-    def get_loss_func(self, loss_name):
-        if loss_name == 'cross':
-            return torch.nn.CrossEntropyLoss()
-        # elif loss_name == 'cross':
-        #     return TripletLoss(self.device)
-        # elif loss_name == 'focal':
-        #     return FocalLoss(gamma=2)
-        else:
-            raise NotImplementedError
 
     @staticmethod
     def _get_arcface(algo, num_classes, params):
@@ -269,6 +259,23 @@ class Trainer:
             return torch.optim.lr_scheduler.StepLR
         else:
             raise NotImplementedError
+        
+    def _get_criterion(self, crit_name=None):
+        if crit_name == 'focal':
+            # https://github.com/AdeelH/pytorch-multi-class-focal-loss
+            focal_loss = torch.hub.load(
+                'adeelh/pytorch-multi-class-focal-loss',
+                model='FocalLoss',
+                # alpha=torch.tensor([.25]),
+                alpha=None,
+                # device=self.device,
+                gamma=2,
+                reduction='mean',
+                force_reload=False
+            )
+            return focal_loss
+        else:
+            return torch.nn.CrossEntropyLoss()
 
 
 def main(resume=False, config_path='config.yml'):
