@@ -6,11 +6,11 @@ device: cuda
 data_ver: imagenet
 
 root:
-  data: /kaggle/input/vn-celeb/VN_celeb/not_mask
-  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask
+  data: /kaggle/input/vn-celeb/VN_celeb/mask
+  test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/mask
   out: /kaggle/working/results
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth
-  
+
 num_classes: 1020 # Number classes of VNceleb
 
 model:
@@ -20,12 +20,12 @@ model:
     height: 128
 
 dataloader:
-  batch_size: 128
+  batch_size: 64
   num_workers: 2
   pin_memory: true
 
 hparams:
-  num_epochs: 100
+  num_epochs: 30
   early_stopping: 0.0001
 
 arcface:
@@ -42,7 +42,7 @@ loss:
 optimizer:
   algo: sgd
   hparams:
-    lr: 0.05
+    lr: 0.01
     weight_decay: 0.0001
     momentum: 0.9
 
