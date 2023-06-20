@@ -76,7 +76,7 @@ class ArcfaceEvaluate:
 
     def get_loader(self, batch_size, transform):
         dataset = ArcfaceDataset(
-            split='test', root=self.root, return_path=True, transforms=transform
+            split='test', root=self.root, return_path=False, transforms=transform
         )
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
@@ -116,8 +116,8 @@ class ArcfaceEvaluate:
         self.model.eval()
         torch.cuda.empty_cache()
         for idx, (input, target) in enumerate(self.train_loader):
-            input = self._preprocess(input)
-            # input = input.to(self.device)
+            # input = self._preprocess(input)
+            input = input.to(self.device)
             output = self.model(input)
             output = output.detach().cpu()
 
