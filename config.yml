@@ -20,7 +20,7 @@ model:
     height: 128
 
 dataloader:
-  batch_size: 128
+  batch_size: 16
   num_workers: 2
   pin_memory: true
 
@@ -31,22 +31,22 @@ hparams:
 arcface:
   algo: arc
   params:
-    s: 30
-    m: 0.5
+    s: 30.0
+    m: 0.40
     easy_margin: False
 
 loss:
-  algo: cross
-  # algo: focal
+  # algo: cross
+  algo: focal
 
 optimizer:
   algo: sgd
   hparams:
-    lr: 0.05
-    weight_decay: 0.0001
-    momentum: 0.9
+    lr: 0.01
+    weight_decay: 0.00001
+    momentum: 0.95
 
 scheduler:
   algo: step
   hparams:
-    step_size: 5
+    step_size: 10

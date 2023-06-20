@@ -14,9 +14,11 @@ class ArcfaceDataset(Dataset):
         split,
         root: str,
         transforms: transforms = None,
+        return_path: bool = False,
     ):
         super().__init__()
         self.transforms = transforms
+        self.return_path = return_path
 
         self.samples = self.get_samples(split, root)
         
@@ -62,6 +64,9 @@ class ArcfaceDataset(Dataset):
 
     def __getitem__(self, idx):
         path, target = self.samples[idx]
+        
+        if self.return_path:
+            return path, target
 
         with open(path, 'rb') as f:
             img = Image.open(f).convert('RGB')

@@ -203,35 +203,36 @@ class Trainer:
             )
             
             # Checkpoints
-            torch.save(
-                {
-                    'epoch': epoch,
-                    'arch': self.model_arch,
-                    'model_state': self.model.state_dict(),
-                    'optim_state': optimizer.state_dict(),
-                    'sched_state': scheduler.state_dict()
-                    if scheduler is not None
-                    else None,
-                    'last_loss': train_loss,
-                },
-                weight_path,
-            )
-            # Evaluate
-            # if (epoch + 1) % 3== 0:
-            with torch.no_grad():
-                eval = ArcfaceEvaluate(
-                    root=self.test_dir,
-                    out_root=self.embedding_root,
-                    weight_path=None,
-                    epoch=epoch,
-                    model=self.model,
-                    img_size=self.img_size,
-                    device=self.device,
-                    batch_size=self.batch_size,
-                    norm_stats=self.norm_stats,
+            if (epoch + 1) % 2 == 0:
+                torch.save(
+                    {
+                        'epoch': epoch,
+                        'arch': self.model_arch,
+                        'model_state': self.model.state_dict(),
+                        'optim_state': optimizer.state_dict(),
+                        'sched_state': scheduler.state_dict()
+                        if scheduler is not None
+                        else None,
+                        'last_loss': train_loss,
+                    },
+                    weight_path,
                 )
-                eval.embedding_dataset()
-                eval.clasification()
+            # Evaluate
+            if (epoch + 1) % 3== 0:
+                with torch.no_grad():
+                    eval = ArcfaceEvaluate(
+                        root=self.test_dir,
+                        out_root=self.embedding_root,
+                        weight_path=None,
+                        epoch=epoch,
+                        model=self.model,
+                        img_size=self.img_size,
+                        device=self.device,
+                        batch_size=self.batch_size,
+                        norm_stats=self.norm_stats,
+                    )
+                    eval.embedding_dataset()
+                    eval.clasification()
                     # logger.info("-" * 20)
             print(("-" * 80))
 

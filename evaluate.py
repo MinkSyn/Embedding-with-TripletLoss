@@ -56,25 +56,28 @@ class ArcfaceEvaluate:
             raise Exception(f'Not exits path: {weight_path}')
         print(f"Loading Model checkpoint {weight_path} ...")
         model_state = torch.load(weight_path, map_location=self.device)
-        
+
         model = resnet_face18(use_se=True)
         try:
             model.load_state_dict(model_state)
-        except: 
+        except:
             from collections import OrderedDict
+
             new_state_dict = OrderedDict()
             for k, v in model_state.items():
                 name = k.replace('module.', '', 1)
                 # name = k.replace('model.', '', 1)
                 new_state_dict[name] = v
             model.load_state_dict(new_state_dict)
-            
+
         model = model.to(self.device)
         model.eval()
         return model
 
     def get_loader(self, batch_size, transform):
-        dataset = ArcfaceDataset(split='test', root=self.root, transforms=transform)
+        dataset = ArcfaceDataset(
+            split='test', root=self.root, return_path=True, transforms=transform
+        )
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
         split = int(np.floor(0.2 * dataset_size))
@@ -89,7 +92,7 @@ class ArcfaceEvaluate:
         train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
         val_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
         return train_loader, val_loader
-    
+
     def _preprocess(self, input):
         if isinstance(input, str):  # path
             input = cv2.imread(input, 0)
@@ -113,8 +116,8 @@ class ArcfaceEvaluate:
         self.model.eval()
         torch.cuda.empty_cache()
         for idx, (input, target) in enumerate(self.train_loader):
-            # input = self._preprocess(input)
-            input = input.to(self.device)
+            input = self._preprocess(input)
+            # input = input.to(self.device)
             output = self.model(input)
             output = output.detach().cpu()
 
@@ -172,11 +175,11 @@ class ArcfaceEvaluate:
             'valid datasets': embedding_val.shape,
             'valid labels': target_val.shape,
         }
-        
+
         print('Size of embedding:')
         print(pd.DataFrame({"size": size_dict.values()}, index=size_dict.keys()))
         print(("-" * 80))
-        
+
         print('KNN classification:')
         self.KNN_classify.fit(embedding_train, target_train)
         KNN_pred = self.KNN_classify.score(embedding_val, target_val)
@@ -188,12 +191,6 @@ class ArcfaceEvaluate:
         SVM_pred = self.SVM_classify.score(embedding_val, target_val)
         print(f'Accuracy SVM: {SVM_pred}')
         print(("-" * 80))
-
-        # print('Linear SVM classification:')
-        # self.LinearSVM_classify.fit(embedding_train, target_train)
-        # LSVM_pred = self.LinearSVM_classify.score(embedding_val, target_val)
-        # print(f'Accuracy Linear SVM: {LSVM_pred}')
-        # print(("-" * 80))
 
         print('Random forest classification:')
         self.RF_classify.fit(embedding_train, target_train)
