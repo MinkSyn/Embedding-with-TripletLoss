@@ -4,6 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 import torch
+from tqdm import tqdm
 from loguru import logger
 from torch.nn import DataParallel
 from sklearn.ensemble import RandomForestClassifier
@@ -27,7 +28,6 @@ class ArcfaceEvaluate:
         device,
         model=None,
         img_size=(128, 128),
-        batch_size=16,
         norm_stats='imagenet',
     ):
         self.device = device
@@ -37,16 +37,14 @@ class ArcfaceEvaluate:
         os.makedirs(self.out_root, exist_ok=True)
         self.img_size = img_size
 
-        logger.info('Evaluate:')
+        logger.info('Evaluate...')
         if model is None:
             self.model = self.load_model(weight_path)
         else:
-            self.model = model
+            self.model = model.eval()
 
         transform = get_tfms(img_size=img_size, phase='test', norm_stats=norm_stats)
-        self.train_loader, self.val_loader = self.get_loader(
-            batch_size=batch_size, transform=transform
-        )
+        self.train_loader, self.val_loader = self.get_loader(transform=transform)
 
         self.KNN_classify = KNeighborsClassifier()
         self.SVM_classify = SVC()
@@ -61,6 +59,7 @@ class ArcfaceEvaluate:
 
         model = resnet_face18(use_se=False)
         model = DataParallel(model)
+        
         try:
             model.load_state_dict(model_state)
         except:
@@ -77,13 +76,13 @@ class ArcfaceEvaluate:
         model.eval()
         return model
 
-    def get_loader(self, batch_size, transform):
+    def get_loader(self, transform):
         dataset = ArcfaceDataset(
             split='test', root=self.root, return_path=True, transforms=transform
         )
         dataset_size = len(dataset)
         indices = list(range(dataset_size))
-        split = int(np.floor(0.2 * dataset_size))
+        split = int(np.floor(0.8 * dataset_size))
 
         np.random.seed(1235)
         np.random.shuffle(indices)
@@ -92,13 +91,13 @@ class ArcfaceEvaluate:
         train_sampler = SubsetRandomSampler(train_indices)
         valid_sampler = SubsetRandomSampler(val_indices)
 
-        train_loader = DataLoader(dataset, batch_size=batch_size, sampler=train_sampler)
-        val_loader = DataLoader(dataset, batch_size=batch_size, sampler=valid_sampler)
+        train_loader = DataLoader(dataset, batch_size=1, sampler=train_sampler)
+        val_loader = DataLoader(dataset, batch_size=1, sampler=valid_sampler)
         return train_loader, val_loader
 
     def _preprocess(self, input):
-        if isinstance(input, str):  # path
-            input = cv2.imread(input, 0)
+        if isinstance(input[0], str):  # path
+            input = cv2.imread(input[0], 0)
         elif isinstance(input, np.ndarray):
             input = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
 
@@ -118,18 +117,26 @@ class ArcfaceEvaluate:
     def embedding_dataset(self):
         self.model.eval()
         torch.cuda.empty_cache()
+
+        logger.info('Embedding for train set')
         for idx, (input, target) in enumerate(self.train_loader):
             input = self._preprocess(input)
             # input = input.to(self.device)
             output = self.model(input)
+            
             output = output.detach().cpu()
+            feature = torch.cat(
+                (output[0], output[1]),
+                dim=-1,
+            )
+            feature = feature.unsqueeze(0)
 
             if idx == 0:
-                embedding_train = output
+                embedding_train = feature
                 target_train = target
             else:
                 embedding_train = torch.cat(
-                    (embedding_train, output),
+                    (embedding_train, feature),
                     dim=0,
                 )
                 target_train = torch.cat(
@@ -137,17 +144,25 @@ class ArcfaceEvaluate:
                     dim=0,
                 )
 
+        logger.info('Embedding for valid set')
         for idx, (input, target) in enumerate(self.val_loader):
-            input = input.to(self.device)
+            input = self._preprocess(input)
+            # input = input.to(self.device)
+            
             output = self.model(input)
             output = output.detach().cpu()
+            feature = torch.cat(
+                (output[0], output[1]),
+                dim=-1,
+            )
+            feature = feature.unsqueeze(0)
 
             if idx == 0:
-                embedding_val = output
+                embedding_val = feature
                 target_val = target
             else:
                 embedding_val = torch.cat(
-                    (embedding_val, output),
+                    (embedding_val, feature),
                     dim=0,
                 )
                 target_val = torch.cat(

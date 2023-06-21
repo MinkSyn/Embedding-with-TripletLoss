@@ -26,14 +26,14 @@ def get_tfms(img_size=(128, 128), phase='train', norm_stats=None):
 
     if phase == 'train':
         transforms = T.Compose([
-            # T.RandomCrop((128, 128)),
+            T.Resize((128, 128)),
             T.RandomHorizontalFlip(),
             T.ToTensor(),
             normalize
         ])
     else:
         transforms = T.Compose([
-            # T.CenterCrop((128, 128)),
+            T.Resize((128, 128)),
             T.ToTensor(),
             normalize
         ])

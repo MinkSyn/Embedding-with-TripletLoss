@@ -55,7 +55,8 @@ class Trainer:
         metric_fc = self._get_arcface(
             cfg['arcface']['algo'], cfg['num_classes'], cfg['arcface']['params']
         )
-        self.metric_fc = metric_fc.to(self.device)
+        metric_fc = metric_fc.to(self.device)
+        self.metric_fc =  DataParallel(metric_fc)
 
         self.optimizer = self._get_optim(cfg['optimizer']['algo'])
         self.optim_hp = cfg['optimizer']['hparams']
@@ -100,7 +101,7 @@ class Trainer:
         return model
 
     def get_loaders(self):
-        tfms = get_tfms(img_size=self.img_size, norm_stats=self.norm_stats)
+        tfms = get_tfms(phase='train')
         train_ds = ArcfaceDataset(
             split='test',
             root=self.data_root,
@@ -148,6 +149,21 @@ class Trainer:
                 scheduler.load_state_dict(ckpt['sched_state'])
 
             logger.info(f"Resuming at epoch [{init_epoch}]")
+        
+        if self.cfg['eval_pretrain']:
+            with torch.no_grad():
+                eval = ArcfaceEvaluate(
+                    root=self.test_dir,
+                    out_root=self.embedding_root,
+                    weight_path=None,
+                    epoch='pre',
+                    model=self.model,
+                    img_size=self.img_size,
+                    device=self.device,
+                    norm_stats=self.norm_stats,
+                )
+                eval.embedding_dataset()
+                eval.clasification()
 
         for epoch in range(init_epoch, self.num_epochs):
             torch.cuda.empty_cache()
@@ -214,7 +230,6 @@ class Trainer:
                         model=self.model,
                         img_size=self.img_size,
                         device=self.device,
-                        batch_size=self.batch_size,
                         norm_stats=self.norm_stats,
                     )
                     eval.embedding_dataset()
