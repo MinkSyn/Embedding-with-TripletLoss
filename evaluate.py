@@ -102,7 +102,7 @@ class ArcfaceEvaluate:
         elif isinstance(input, np.ndarray):
             input = cv2.cvtColor(input, cv2.COLOR_BGR2GRAY)
 
-        img_resize = cv2.resize(input, (128,128))
+        img_resize = cv2.resize(input, [128,128])
         img_lst = np.dstack((img_resize, np.fliplr(img_resize)))
         img_lst = img_lst.transpose((2, 0, 1))
         img_lst = img_lst[:, np.newaxis, :, :]
