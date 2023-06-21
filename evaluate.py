@@ -120,7 +120,7 @@ class ArcfaceEvaluate:
         torch.cuda.empty_cache()
         for idx, (input, target) in enumerate(self.train_loader):
             input = self._preprocess(input)
-            # input = input.to(self.device)
+            input = input.to(self.device)
             output = self.model(input)
             output = output.detach().cpu()
 
