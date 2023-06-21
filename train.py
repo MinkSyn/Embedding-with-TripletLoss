@@ -77,8 +77,7 @@ class Trainer:
         
         self.embedding_root = f"{self.out_root}/res_embedding"
         os.makedirs(self.embedding_root, exist_ok=True)
-        if cfg['root']['ckpt'] is not None:
-            self.ckpt_path = cfg['root']['ckpt']
+        self.ckpt_path = cfg['root']['ckpt']
             
     def load_model(self, weight_path):
         model = resnet_face18(use_se=False)
@@ -201,22 +200,9 @@ class Trainer:
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
+
+            torch.save(self.model.state_dict(), weight_path)
             
-            # Checkpoints
-            if (epoch + 1) % 2 == 0:
-                torch.save(
-                    {
-                        'epoch': epoch,
-                        'arch': self.model_arch,
-                        'model_state': self.model.state_dict(),
-                        'optim_state': optimizer.state_dict(),
-                        'sched_state': scheduler.state_dict()
-                        if scheduler is not None
-                        else None,
-                        'last_loss': train_loss,
-                    },
-                    weight_path,
-                )
             # Evaluate
             if (epoch + 1) % 3== 0:
                 with torch.no_grad():

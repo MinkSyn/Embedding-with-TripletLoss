@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 from loguru import logger
+from torch.nn import DataParallel
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.svm import SVC, LinearSVC
@@ -34,6 +35,7 @@ class ArcfaceEvaluate:
         self.out_root = out_root
         self.epoch = epoch
         os.makedirs(self.out_root, exist_ok=True)
+        self.img_size = img_size
 
         logger.info('Evaluate:')
         if model is None:
@@ -57,7 +59,8 @@ class ArcfaceEvaluate:
         print(f"Loading Model checkpoint {weight_path} ...")
         model_state = torch.load(weight_path, map_location=self.device)
 
-        model = resnet_face18(use_se=True)
+        model = resnet_face18(use_se=False)
+        model = DataParallel(model)
         try:
             model.load_state_dict(model_state)
         except:

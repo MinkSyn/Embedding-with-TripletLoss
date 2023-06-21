@@ -10,6 +10,8 @@ root:
   test: /kaggle/input/celeb-vn-face-origin/origin_celeb_faces/not_mask
   out: /kaggle/working/results
   ckpt: /kaggle/input/resnet-pth12/resnet18_110.pth
+
+checkpoints: /kaggle/working/results/checkpoint
   
 num_classes: 1020 # Number classes of VNceleb
 
