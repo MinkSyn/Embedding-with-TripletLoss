@@ -45,7 +45,7 @@ class Trainer:
         self.norm_stats = STATS[self.data_ver]
         logger.info(f"Using stats of [{self.data_ver}]: {self.norm_stats}")
 
-        self.batch_size = 16
+        self.batch_size = cfg['dataloader']['batch_size']
         self.num_workers = cfg['dataloader']['num_workers']
         self.pin_memory = cfg['dataloader']['pin_memory']
 
