@@ -45,7 +45,7 @@ class Trainer:
         self.norm_stats = STATS[self.data_ver]
         logger.info(f"Using stats of [{self.data_ver}]: {self.norm_stats}")
 
-        self.batch_size = cfg['dataloader']['batch_size']
+        self.batch_size = 16
         self.num_workers = cfg['dataloader']['num_workers']
         self.pin_memory = cfg['dataloader']['pin_memory']
 
@@ -74,12 +74,12 @@ class Trainer:
 
         self.weights_dir = f"{self.out_root}/weights"
         os.makedirs(self.weights_dir, exist_ok=True)
-        
+
         self.embedding_root = f"{self.out_root}/res_embedding"
         os.makedirs(self.embedding_root, exist_ok=True)
         if cfg['root']['ckpt'] is not None:
             self.ckpt_path = cfg['root']['ckpt']
-            
+
     def load_model(self, weight_path):
         model = resnet_face18(use_se=False)
         model = DataParallel(model)
@@ -95,7 +95,7 @@ class Trainer:
                 name = k.replace('module.', '', 1)
                 new_state_dict[name] = v
             model.load_state_dict(new_state_dict)
-            
+
         model.to(self.device)
         model.eval()
         return model
@@ -196,12 +196,12 @@ class Trainer:
             # logger.info(epoch_info)
             print(epoch_info)
 
-            
+
             logger.info(f"Save checkpoints for epoch {epoch + 1}.")
             weight_path = (
                 f"{self.weights_dir}/{self.run_name}__ep{str(epoch+1).zfill(2)}.pth"
             )
-            
+
             # Checkpoints
             if (epoch + 1) % 2 == 0:
                 torch.save(
@@ -280,7 +280,7 @@ class Trainer:
             return torch.optim.lr_scheduler.StepLR
         else:
             raise NotImplementedError
-        
+
     def _get_criterion(self, crit_name=None):
         if crit_name == 'focal':
             # https://github.com/AdeelH/pytorch-multi-class-focal-loss
